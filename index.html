@@ -1,0 +1,1884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <link rel="icon" href="https://cdn.jsdelivr.net/gh/limkimsze-maker/P3_SDR_Spelling@main/kimsze_sharp16.ico?v=20260111a" sizes="any" />
+  <title>Phonogram Challenge – 1 or 2 Player Coverage Quest</title>
+  <style>
+    :root{
+      --ink:#263238;
+      --muted:#607d8b;
+      --paper:#fffdf7;
+      --bg1:#e8f5ff;
+      --bg2:#fff1d8;
+      --blue:#2f7de1;
+      --blue2:#dcecff;
+      --green:#2e9d63;
+      --green2:#e4f7ec;
+      --red:#d95a63;
+      --red2:#ffe8ea;
+      --gold:#f4b942;
+      --purple:#7657c7;
+      --shadow:0 10px 28px rgba(42,62,80,.14);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;overflow:hidden}
+    body{
+      font-family:"Trebuchet MS","Arial Rounded MT Bold",Arial,sans-serif;
+      color:var(--ink);
+      background:linear-gradient(135deg,var(--bg1),var(--bg2));
+      -webkit-tap-highlight-color:transparent;
+      user-select:none;
+    }
+    button{font:inherit}
+    #app{
+      width:min(1180px,100vw);
+      height:100vh;
+      margin:auto;
+      padding:10px 14px 12px;
+      display:grid;
+      grid-template-rows:auto auto 1fr auto;
+      gap:8px;
+    }
+    header{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      background:rgba(255,255,255,.9);border:2px solid rgba(47,125,225,.18);
+      border-radius:18px;padding:8px 14px;box-shadow:var(--shadow);
+    }
+    .brand{display:flex;align-items:center;gap:10px;min-width:0}
+    .logo{
+      width:46px;height:46px;border-radius:14px;display:grid;place-items:center;
+      background:linear-gradient(145deg,#5fa7ff,#7657c7);color:white;font-size:27px;
+      box-shadow:inset 0 -4px 0 rgba(0,0,0,.08)
+    }
+    h1{font-size:clamp(21px,2.5vw,31px);margin:0;line-height:1;color:#23415a;white-space:nowrap}
+    .sub{font-size:12px;color:var(--muted);font-weight:700;margin-top:4px}
+    .stats{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+    .pill{
+      padding:7px 11px;border-radius:999px;background:white;border:2px solid #dce5eb;
+      font-weight:900;font-size:14px;white-space:nowrap
+    }
+    .pill.level{background:#eef4ff;border-color:#b8d2ff;color:#245fb3}
+    .pill.streak{background:#fff7df;border-color:#f4d782;color:#8c6500}
+    .pill.score{background:#e9f8ef;border-color:#a9dfbd;color:#23794a}
+
+    .listenBar{
+      background:rgba(255,255,255,.92);border-radius:18px;padding:9px 12px;
+      display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;
+      border:2px solid rgba(118,87,199,.16);box-shadow:var(--shadow)
+    }
+    .hearBtn,.sentenceBtn,.mainBtn,.smallBtn{
+      border:none;border-radius:14px;cursor:pointer;font-weight:900;box-shadow:0 4px 0 rgba(0,0,0,.12);
+      transition:transform .08s,filter .12s
+    }
+    button:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.12)}
+    button:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.2)}
+    .hearBtn{padding:12px 18px;background:#7657c7;color:#fff;font-size:20px}
+    .sentenceBtn{padding:10px 13px;background:#e9e3fb;color:#523b9e;font-size:14px}
+    .promptText{text-align:center;min-width:0}
+    .promptTitle{font-size:clamp(16px,2vw,22px);font-weight:1000;color:#314b61}
+    .promptHint{font-size:13px;color:var(--muted);font-weight:700;margin-top:3px}
+    #revealedWord{color:var(--green);letter-spacing:.5px}
+
+    main{
+      min-height:0;background:rgba(255,255,255,.87);border-radius:20px;padding:10px 12px;
+      box-shadow:var(--shadow);border:2px solid rgba(255,255,255,.8);
+      display:grid;grid-template-rows:minmax(150px,42%) minmax(0,1fr);gap:10px;
+    }
+    #syllableArea{
+      display:grid;gap:10px;align-items:stretch;min-height:0
+    }
+    .syllableBox{
+      position:relative;border:3px dashed #9cb8cf;border-radius:18px;background:#f8fcff;
+      min-width:0;padding:34px 8px 8px;display:flex;align-items:center;justify-content:center;
+      gap:7px;flex-wrap:wrap;overflow:auto;transition:.15s;
+    }
+    .syllableBox::before{
+      content:attr(data-label);position:absolute;top:7px;left:10px;right:10px;text-align:center;
+      font-size:13px;font-weight:1000;color:#607d8b;text-transform:uppercase;letter-spacing:.6px
+    }
+    .syllableBox.dragover{background:#eaf4ff;border-color:#2f7de1;transform:scale(1.01)}
+    .tile.dragging{opacity:.34}
+    .syllableBox.ok{background:var(--green2);border-color:var(--green)}
+    .syllableBox.bad{background:var(--red2);border-color:var(--red)}
+    .emptyHint{font-size:14px;color:#9aa8b2;font-weight:800;text-align:center;pointer-events:none}
+
+    #trayWrap{
+      min-height:0;border-radius:18px;background:#fffaf0;border:2px solid #f1d99b;
+      display:grid;grid-template-rows:auto 1fr;overflow:hidden
+    }
+    .trayHead{padding:7px 10px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff3cf}
+    .trayTitle{font-size:14px;font-weight:1000;color:#6f5717}
+    .trayHelp{font-size:12px;font-weight:800;color:#8a7540;text-align:right}
+    #phonogramTray{
+      padding:10px;display:flex;align-content:flex-start;justify-content:center;gap:8px;flex-wrap:wrap;
+      overflow:auto;min-height:0;transition:.15s
+    }
+    #phonogramTray.dragover{background:#fff1bf;box-shadow:inset 0 0 0 3px rgba(201,151,27,.22)}
+    .tile{
+      position:relative;min-width:58px;height:55px;padding:0 14px;border-radius:15px;border:2px solid #b7ccdd;
+      background:white;color:#244258;font-size:clamp(22px,2.6vw,32px);font-weight:1000;
+      display:flex;align-items:center;justify-content:center;cursor:grab;box-shadow:0 4px 0 #c9d8e3;
+      touch-action:none;transition:transform .08s,background .12s,border-color .12s;
+    }
+    .tile:hover{background:#f3f9ff}
+    
+    .tile.placed{height:50px;min-width:53px;font-size:clamp(20px,2.4vw,29px);cursor:grab;box-shadow:0 3px 0 #b9c8d2}
+    .tile .soundDot{
+      position:absolute;right:4px;top:4px;width:9px;height:9px;border-radius:50%;background:#7657c7;opacity:.75
+    }
+    .schwaMark::after{content:"ə";position:absolute;left:5px;top:2px;color:#d43c4a;font-size:13px;font-weight:1000}
+
+    footer{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
+    #feedback{font-size:15px;font-weight:900;color:#4e6474;min-width:0}
+    .actions{display:flex;gap:9px;justify-content:center}
+    .mainBtn{padding:11px 18px;background:#2e9d63;color:white;font-size:17px;min-width:124px}
+    .mainBtn.next{background:#2f7de1}
+    .smallBtn{padding:9px 12px;background:#e7edf2;color:#3e5668;font-size:13px}
+    .rightTools{display:flex;gap:7px;justify-content:flex-end}
+    #teacherBtn{width:34px;min-width:34px;padding:8px 0;background:#6b7280;color:white}
+
+    #loadingScreen,#startScreen,#teacherPanel{
+      position:fixed;inset:0;z-index:30;background:rgba(27,45,59,.66);display:grid;place-items:center;padding:20px
+    }
+    .modal{
+      width:min(640px,94vw);background:#fff;border-radius:24px;padding:22px;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.28)
+    }
+    .modal h2{font-size:31px;margin:4px 0 8px;color:#27445a}
+    .modal p{font-size:16px;line-height:1.45;color:#577083;font-weight:700}
+    .bigStart{border:none;border-radius:17px;padding:14px 28px;background:#2f7de1;color:white;font-size:22px;font-weight:1000;cursor:pointer;box-shadow:0 5px 0 #1f5fae}
+    .loader{width:58px;height:58px;border-radius:50%;border:7px solid #d9e7f2;border-top-color:#2f7de1;margin:0 auto 14px;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .hidden{display:none!important}
+
+    #teacherPanel .modal{text-align:left;max-width:520px}
+    #teacherPanel h2{text-align:center}
+    .teacherRow{display:flex;gap:8px;align-items:center;margin:10px 0;flex-wrap:wrap}
+    .teacherRow label{font-weight:900}
+    .teacherRow select,.teacherRow input{padding:9px;border:2px solid #ccd9e2;border-radius:10px;font:inherit}
+    .teacherRow button{border:none;border-radius:10px;padding:9px 12px;font-weight:900;cursor:pointer}
+    .danger{background:#d95a63;color:white}.close{background:#e7edf2;color:#334b5e}.teacherSet{background:#2f7de1;color:#fff}
+    #bankStatus{font-size:13px;color:#607d8b;line-height:1.4}
+
+    #confetti{position:fixed;inset:0;pointer-events:none;z-index:50}
+    .confettiPiece{position:absolute;top:-20px;width:10px;height:18px;border-radius:3px;animation:fall 1.8s linear forwards}
+    @keyframes fall{to{transform:translate(var(--drift),110vh) rotate(720deg);opacity:.2}}
+
+    @media(max-width:760px){
+      #app{padding:6px;gap:6px}
+      header{padding:7px 9px;border-radius:14px}.logo{width:39px;height:39px;font-size:23px}.sub{display:none}
+      .stats{gap:4px}.pill{font-size:11px;padding:5px 7px}.listenBar{grid-template-columns:auto 1fr;padding:7px;gap:7px}
+      .hearBtn{padding:10px 12px;font-size:16px}.sentenceBtn{font-size:11px;padding:8px}.promptHint{font-size:11px}
+      main{padding:7px;gap:7px}.syllableBox{padding:29px 5px 5px}.syllableBox::before{font-size:10px;top:5px}
+      .tile{min-width:48px;height:48px;padding:0 10px}.tile.placed{min-width:45px;height:44px}
+      .trayHead{padding:5px 7px}.trayHelp{display:none}#phonogramTray{padding:7px;gap:6px}
+      footer{grid-template-columns:1fr auto}.rightTools{display:none}.actions{justify-content:flex-end}.mainBtn{min-width:103px;padding:9px 12px;font-size:15px}
+      #feedback{font-size:12px}
+    }
+
+    /* ---------- Engagement layer: calm game feel, same spelling pedagogy ---------- */
+    body::before,body::after{
+      content:"";position:fixed;border-radius:50%;pointer-events:none;z-index:-1;opacity:.34;
+      filter:blur(1px)
+    }
+    body::before{width:220px;height:220px;left:-70px;top:18%;background:#bfe4ff}
+    body::after{width:260px;height:260px;right:-90px;bottom:8%;background:#ffe1a6}
+
+    .journeyWrap{
+      display:flex;align-items:center;gap:7px;min-width:270px;justify-content:flex-end
+    }
+    .journeyLabel{
+      font-size:11px;font-weight:1000;color:#668093;text-transform:uppercase;letter-spacing:.7px;white-space:nowrap
+    }
+    .journey{
+      display:flex;align-items:center;gap:0
+    }
+    .journeyNode{
+      width:29px;height:29px;border-radius:50%;display:grid;place-items:center;position:relative;
+      border:2px solid #c9d7e1;background:#f7fafc;color:#7890a1;font-size:12px;font-weight:1000;
+      transition:.2s;z-index:1
+    }
+    .journeyNode:not(:last-child){margin-right:22px}
+    .journeyNode:not(:last-child)::after{
+      content:"";position:absolute;left:27px;top:11px;width:24px;height:4px;border-radius:4px;background:#dbe5eb;z-index:-1
+    }
+    .journeyNode.done{background:#e7f8ee;border-color:#67c48e;color:#23794a}
+    .journeyNode.done:not(:last-child)::after{background:#8fd8ad}
+    .journeyNode.current{
+      background:#7657c7;border-color:#7657c7;color:white;transform:scale(1.12);
+      box-shadow:0 0 0 5px rgba(118,87,199,.13);animation:journeyPulse 1.8s ease-in-out infinite
+    }
+    @keyframes journeyPulse{50%{box-shadow:0 0 0 9px rgba(118,87,199,.06)}}
+
+    .missionStrip{
+      display:flex;align-items:center;justify-content:center;gap:12px;margin-top:5px;flex-wrap:wrap
+    }
+    .missionChip{
+      border-radius:999px;padding:4px 10px;background:#edf4ff;border:1.5px solid #c6dbff;
+      color:#325f9d;font-size:11px;font-weight:1000
+    }
+    .masteryStars{display:flex;gap:4px;align-items:center}
+    .masteryStar{
+      font-size:20px;line-height:1;filter:grayscale(1);opacity:.28;transform:scale(.86);transition:.25s
+    }
+    .masteryStar.on{
+      filter:none;opacity:1;transform:scale(1.08);animation:starPop .35s ease-out
+    }
+    @keyframes starPop{0%{transform:scale(.35) rotate(-18deg)}70%{transform:scale(1.25) rotate(8deg)}100%{transform:scale(1.08)}}
+
+    .listenBar.listening{
+      border-color:#9f8bdf;box-shadow:0 10px 30px rgba(118,87,199,.22)
+    }
+    .listenBar.listening .hearBtn{animation:listenPulse .8s ease-in-out infinite alternate}
+    .logo.listening{animation:listenPulse .8s ease-in-out infinite alternate}
+    @keyframes listenPulse{to{transform:scale(1.055);filter:brightness(1.08)}}
+
+    .syllableBox{
+      box-shadow:inset 0 0 0 0 rgba(47,125,225,0)
+    }
+    .syllableBox.selectedTarget{
+      box-shadow:inset 0 0 0 4px rgba(47,125,225,.09)
+    }
+    .tile.soundPulse{animation:tileSound .42s ease-out}
+    @keyframes tileSound{
+      0%{transform:scale(1)}
+      35%{transform:scale(1.13) rotate(-2deg);box-shadow:0 7px 0 #afc7d7,0 0 0 7px rgba(118,87,199,.12)}
+      100%{transform:scale(1)}
+    }
+    .tile.dropPop{animation:dropPop .28s ease-out}
+    @keyframes dropPop{0%{transform:scale(.78)}70%{transform:scale(1.10)}100%{transform:scale(1)}}
+
+    .trayTitle::before{content:"🎧 ";font-size:15px}
+    .emptyHint::before{content:"＋ ";font-weight:1000}
+
+    #rewardToast{
+      position:fixed;left:50%;top:47%;transform:translate(-50%,-50%) scale(.72);
+      z-index:45;pointer-events:none;opacity:0;
+      min-width:min(390px,86vw);padding:18px 24px;border-radius:24px;
+      background:rgba(255,255,255,.97);border:3px solid #f4cf64;text-align:center;
+      box-shadow:0 24px 70px rgba(31,58,78,.28)
+    }
+    #rewardToast.show{animation:rewardIn 1.45s ease forwards}
+    #rewardIcon{font-size:46px;line-height:1}
+    #rewardTitle{font-size:25px;font-weight:1000;color:#28516d;margin-top:4px}
+    #rewardWord{font-size:34px;font-weight:1000;color:#2e9d63;letter-spacing:.6px;margin-top:2px}
+    #rewardSub{font-size:13px;font-weight:900;color:#6c8291;margin-top:5px}
+    @keyframes rewardIn{
+      0%{opacity:0;transform:translate(-50%,-50%) scale(.68) rotate(-2deg)}
+      18%{opacity:1;transform:translate(-50%,-50%) scale(1.05) rotate(1deg)}
+      28%,78%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+      100%{opacity:0;transform:translate(-50%,-58%) scale(.94)}
+    }
+
+    .modal.startAdventure{
+      background:linear-gradient(180deg,#ffffff,#f7fbff);border:3px solid #d6e7f5
+    }
+    .startBadge{
+      display:inline-block;padding:6px 12px;border-radius:999px;background:#fff3cf;color:#765c13;
+      border:2px solid #f4d377;font-size:13px;font-weight:1000;margin:4px 0 2px
+    }
+    .startTrail{
+      display:flex;justify-content:center;align-items:center;gap:7px;margin:15px 0 12px
+    }
+    .startTrail span{
+      width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#eef4ff;
+      border:2px solid #bad3fb;color:#2f67a9;font-weight:1000
+    }
+    .startTrail i{width:24px;height:4px;border-radius:5px;background:#d4e1ec}
+
+    .feedbackGood{color:#23794a!important}
+    .feedbackTry{color:#895f16!important}
+
+    @media(max-width:900px){
+      .journeyWrap{min-width:auto}.journeyLabel{display:none}
+      .journeyNode{width:25px;height:25px;font-size:10px}
+      .journeyNode:not(:last-child){margin-right:14px}
+      .journeyNode:not(:last-child)::after{left:23px;top:9px;width:17px}
+    }
+    @media(max-width:620px){
+      .journeyWrap{display:none}
+      .missionStrip{gap:6px;margin-top:3px}
+      .masteryStar{font-size:17px}
+      .missionChip{font-size:10px;padding:3px 7px}
+      #rewardTitle{font-size:21px}#rewardWord{font-size:29px}
+    }
+
+
+    /* ===== 2-player phonogram coverage race ===== */
+    .playerBoards{
+      display:flex;gap:10px;align-items:stretch;justify-content:flex-end;min-width:min(620px,58vw)
+    }
+    .playerCard{
+      width:250px;max-width:28vw;background:#f7fafc;border:2px solid #dbe5eb;border-radius:15px;
+      padding:7px 9px;transition:.18s;box-shadow:0 2px 7px rgba(32,60,80,.06)
+    }
+    .playerCard.active{
+      background:#fff7df;border-color:#f0c954;box-shadow:0 0 0 4px rgba(244,185,66,.14);
+      transform:translateY(-1px)
+    }
+    .playerCard.finished{background:#e9f8ef;border-color:#8fd8ad}
+    .playerTop{display:flex;align-items:center;justify-content:space-between;gap:7px}
+    .playerName{font-size:14px;font-weight:1000;color:#29485e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .playerScore{font-size:13px;font-weight:1000;color:#7657c7;white-space:nowrap}
+    .coverageLine{display:flex;gap:6px;align-items:center;margin-top:5px}
+    .coverageTrack{height:10px;flex:1;background:#e5edf2;border-radius:999px;overflow:hidden}
+    .coverageFill{height:100%;width:0;background:linear-gradient(90deg,#42b678,#2f7de1);border-radius:999px;transition:.35s}
+    .coverageText{font-size:10px;font-weight:1000;color:#617887;min-width:88px;text-align:right;white-space:nowrap}
+    .turnBanner{
+      display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 10px;
+      background:#fff1bf;border:1.5px solid #efd373;color:#735c16;font-size:12px;font-weight:1000
+    }
+    .newCoverage{
+      display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 8px;background:#e8f8ee;
+      color:#26784c;font-size:11px;font-weight:1000
+    }
+    .nameGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+    .nameBox{text-align:left}
+    .nameBox label{font-size:13px;font-weight:1000;color:#526d80;display:block;margin-bottom:5px}
+    .nameBox input{
+      width:100%;padding:11px 12px;border:2px solid #cad9e4;border-radius:12px;font:inherit;font-weight:900;
+      color:#29485e;outline:none
+    }
+    .nameBox input:focus{border-color:#6ca8ed;box-shadow:0 0 0 4px rgba(47,125,225,.1)}
+    .rulesBox{
+      background:#f6f9fc;border:2px solid #dce7ef;border-radius:15px;padding:10px 12px;text-align:left;
+      font-size:13px;line-height:1.45;color:#587184;font-weight:700
+    }
+    .coverageLegend{display:flex;gap:7px;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:8px}
+    .legendChip{padding:4px 8px;border-radius:999px;background:#edf4ff;color:#37699f;font-size:11px;font-weight:900}
+    #winnerScreen{
+      position:fixed;inset:0;z-index:60;background:rgba(27,45,59,.72);display:grid;place-items:center;padding:20px
+    }
+    .winnerCup{font-size:72px;line-height:1}
+    #winnerTitle{font-size:34px;font-weight:1000;color:#27445a;margin:6px 0}
+    #winnerSummary{font-size:15px;color:#597183;font-weight:800;line-height:1.5}
+    .coverageTokens{
+      max-height:120px;overflow:auto;margin-top:9px;padding:7px;border:1.5px solid #dce7ef;border-radius:11px;
+      background:#f9fbfd;font-size:11px;color:#5d7383;line-height:1.55
+    }
+    .coverageTokens b{color:#2c5d83}
+    @media(max-width:900px){
+      header{align-items:flex-start}
+      .playerBoards{min-width:0;max-width:58vw;gap:5px}
+      .playerCard{width:180px;max-width:28vw;padding:5px 6px}
+      .playerName{font-size:11px}.playerScore{font-size:10px}.coverageText{font-size:9px;min-width:46px}
+    }
+    @media(max-width:650px){
+      .playerBoards{max-width:55vw}.playerCard{max-width:27vw}
+      .coverageText{display:none}.playerName{font-size:10px}
+      .nameGrid{grid-template-columns:1fr}
+    }
+
+
+    .modeChooser{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:12px 0 6px}
+    .modeBtn{border:none;border-radius:999px;padding:10px 16px;font:inherit;font-weight:1000;cursor:pointer;background:#edf4ff;color:#37699f;box-shadow:0 3px 0 #bfd0ea}
+    .modeBtn.active{background:#7657c7;color:#fff;box-shadow:0 3px 0 #5d41a7}
+    .hiddenField{display:none!important}
+    .soloCardHide{display:none!important}
+
+
+    .saveNote{
+      margin-top:9px;font-size:11px;font-weight:800;color:#6b8190;text-align:center
+    }
+    .resumeBtn{
+      margin-top:9px;background:#2f7de1!important;box-shadow:0 4px 0 #1e5cae!important
+    }
+    #resetProgress{
+      position:relative;overflow:hidden;min-width:170px;user-select:none;-webkit-user-select:none;
+      touch-action:none
+    }
+    #resetProgress::after{
+      content:"";position:absolute;left:0;bottom:0;height:5px;width:var(--hold,0%);
+      background:rgba(255,255,255,.9);transition:width .08s linear;pointer-events:none
+    }
+    #resetProgress.holding{filter:brightness(.92)}
+
+
+    /* ===== Six-mission star journey ===== */
+    .missionRoadmap{
+      display:flex;align-items:center;justify-content:center;gap:10px;
+      padding:6px 12px;margin:0 10px 8px;border-radius:16px;
+      background:rgba(255,255,255,.88);border:2px solid #d9e7f3;
+      box-shadow:0 3px 12px rgba(41,72,92,.06)
+    }
+    .roadmapName{
+      font-size:12px;font-weight:1000;color:#587184;margin-right:3px;white-space:nowrap
+    }
+    .missionStars{display:flex;gap:7px;align-items:center}
+    .missionStar{
+      font-size:30px;line-height:1;color:#b8c5cf;filter:grayscale(1);
+      text-shadow:0 2px 0 rgba(0,0,0,.06);transform:scale(.92);
+      transition:transform .25s,filter .25s,color .25s
+    }
+    .missionStar.earned{
+      color:#ffd42a;filter:none;transform:scale(1.08);
+      text-shadow:0 0 6px #fff3a0,0 0 13px #ffc400,0 2px 0 rgba(160,110,0,.18)
+    }
+    .missionStar.justEarned{animation:starShine 1.2s ease-in-out 2}
+    @keyframes starShine{
+      0%,100%{transform:scale(1.08) rotate(0)}
+      30%{transform:scale(1.38) rotate(-10deg);filter:brightness(1.35)}
+      60%{transform:scale(1.18) rotate(9deg)}
+    }
+
+    /* ===== Mission dance celebration ===== */
+    #missionDanceScreen{
+      position:fixed;inset:0;z-index:80;display:grid;place-items:center;
+      padding:18px;background:rgba(24,41,58,.78);backdrop-filter:blur(5px)
+    }
+    .danceCard{
+      width:min(650px,92vw);background:linear-gradient(180deg,#fffdf2,#ffffff);
+      border:4px solid #f4cd55;border-radius:28px;padding:20px 24px 18px;text-align:center;
+      box-shadow:0 28px 90px rgba(0,0,0,.30);overflow:hidden;position:relative
+    }
+    .danceBadge{
+      display:inline-block;padding:5px 11px;border-radius:999px;background:#fff1b8;
+      color:#7d6014;font-size:12px;font-weight:1000;margin-bottom:4px
+    }
+    #danceTitle{font-size:31px;font-weight:1000;color:#29485e;margin:3px 0 7px}
+    #danceNote{
+      max-width:560px;margin:0 auto;color:#587184;font-size:16px;font-weight:800;line-height:1.45
+    }
+    .danceStage{
+      height:190px;position:relative;margin:12px auto 8px;border-radius:22px;
+      background:linear-gradient(180deg,#e9f5ff,#fff5d7);overflow:hidden;
+      border:2px solid #d9e7ef
+    }
+    .danceFloor{
+      position:absolute;left:7%;right:7%;bottom:18px;height:18px;border-radius:50%;
+      background:rgba(83,117,141,.13)
+    }
+    .danceTile{
+      position:absolute;bottom:32px;width:82px;height:72px;border-radius:18px;
+      display:grid;place-items:center;background:#fff;border:4px solid #bcd2e1;
+      box-shadow:0 8px 0 #a8bfd0;font-size:29px;font-weight:1000;color:#29485e
+    }
+    .danceTile.one{left:19%;animation:danceLeft .72s ease-in-out infinite alternate}
+    .danceTile.two{left:calc(50% - 41px);animation:danceMiddle .62s ease-in-out infinite alternate}
+    .danceTile.three{right:19%;animation:danceRight .78s ease-in-out infinite alternate}
+    @keyframes danceLeft{
+      from{transform:translateY(0) rotate(-7deg)}
+      to{transform:translateY(-46px) rotate(10deg) scale(1.07)}
+    }
+    @keyframes danceMiddle{
+      from{transform:translateY(-6px) rotate(7deg)}
+      to{transform:translateY(-57px) rotate(-8deg) scale(1.09)}
+    }
+    @keyframes danceRight{
+      from{transform:translateY(-2px) rotate(8deg)}
+      to{transform:translateY(-42px) rotate(-11deg) scale(1.06)}
+    }
+    .danceNoteFloat{
+      position:absolute;font-size:26px;animation:floatNote 2.1s linear infinite;opacity:.82
+    }
+    .danceNoteFloat.n1{left:9%;bottom:-20px;animation-delay:.1s}
+    .danceNoteFloat.n2{left:35%;bottom:-20px;animation-delay:.8s}
+    .danceNoteFloat.n3{right:29%;bottom:-20px;animation-delay:.35s}
+    .danceNoteFloat.n4{right:8%;bottom:-20px;animation-delay:1.15s}
+    @keyframes floatNote{
+      0%{transform:translateY(0) rotate(-10deg);opacity:0}
+      20%{opacity:.9}
+      100%{transform:translateY(-210px) rotate(20deg);opacity:0}
+    }
+    .danceStars{
+      position:absolute;inset:0;pointer-events:none
+    }
+    .danceSpark{
+      position:absolute;font-size:18px;animation:sparkle 1.4s ease-in-out infinite alternate
+    }
+    .danceSpark.s1{left:12%;top:12%}.danceSpark.s2{right:15%;top:15%;animation-delay:.4s}
+    .danceSpark.s3{left:46%;top:9%;animation-delay:.75s}.danceSpark.s4{right:35%;top:35%;animation-delay:.2s}
+    @keyframes sparkle{from{transform:scale(.5) rotate(0);opacity:.3}to{transform:scale(1.4) rotate(35deg);opacity:1}}
+    .danceActions{display:flex;justify-content:center;gap:10px;margin-top:12px}
+    #danceContinueBtn{
+      border:none;border-radius:14px;padding:11px 22px;background:#2ea565;color:#fff;
+      font:inherit;font-weight:1000;font-size:16px;cursor:pointer;box-shadow:0 4px 0 #20834e
+    }
+    #danceClosePreviewBtn{
+      border:none;border-radius:14px;padding:11px 18px;background:#e8eef3;color:#496579;
+      font:inherit;font-weight:1000;cursor:pointer;box-shadow:0 4px 0 #c5d0d8
+    }
+    #dancePreviewBtn{white-space:nowrap}
+    @media(max-width:650px){
+      .missionRoadmap{gap:5px;margin:0 6px 6px;padding:5px 7px}
+      .roadmapName{display:none}.missionStars{gap:4px}.missionStar{font-size:24px}
+      .danceTile{width:68px;height:62px;font-size:24px}
+      .danceTile.one{left:12%}.danceTile.three{right:12%}
+      #danceTitle{font-size:25px}#danceNote{font-size:14px}
+    }
+
+  </style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand">
+      <div class="logo">🏁</div>
+      <div><h1>Phonogram Challenge</h1><div class="sub">1-Player or 2-Player Coverage Quest • Hear • Build • Spell</div></div>
+    </div>
+    <div class="playerBoards">
+      <div class="playerCard active" id="playerCard0">
+        <div class="playerTop"><span class="playerName" id="playerName0">Player 1</span><span class="playerScore" id="playerScore0">0 pts</span></div>
+        <div class="coverageLine"><div class="coverageTrack"><div class="coverageFill" id="coverageFill0"></div></div><span class="coverageText" id="coverageText0">0 / 10 words</span></div>
+      </div>
+      <div class="playerCard" id="playerCard1">
+        <div class="playerTop"><span class="playerName" id="playerName1">Player 2</span><span class="playerScore" id="playerScore1">0 pts</span></div>
+        <div class="coverageLine"><div class="coverageTrack"><div class="coverageFill" id="coverageFill1"></div></div><span class="coverageText" id="coverageText1">0 / 10 words</span></div>
+      </div>
+    </div>
+  </header>
+
+
+  <div class="missionRoadmap" id="missionRoadmap" aria-label="Six mission progress">
+    <span class="roadmapName" id="roadmapName">Player 1's Mission Stars</span>
+    <div class="missionStars">
+      <span class="missionStar" data-mission-star="1" title="Mission 1">☆</span>
+      <span class="missionStar" data-mission-star="2" title="Mission 2">☆</span>
+      <span class="missionStar" data-mission-star="3" title="Mission 3">☆</span>
+      <span class="missionStar" data-mission-star="4" title="Mission 4">☆</span>
+      <span class="missionStar" data-mission-star="5" title="Mission 5">☆</span>
+      <span class="missionStar" data-mission-star="6" title="Mission 6">☆</span>
+    </div>
+  </div>
+
+  <section class="listenBar">
+    <button id="hearWordBtn" class="hearBtn" aria-label="Hear the word">🔊 Hear Spelling Prompt</button>
+    <div class="promptText">
+      <div class="promptTitle" id="promptTitle">Listen: word → sentence → word. Then build it by syllables.</div>
+      <div class="promptHint" id="promptHint">Tap any phonogram to hear its phoneme. Drag phonograms to move or reorder them.</div>
+      <div class="missionStrip">
+        <span class="turnBanner" id="turnBanner">🏁 Player 1's turn</span>
+        <span class="missionChip" id="missionChip">📝 Mission 1 • 0/10 words</span>
+        <span class="newCoverage hidden" id="newCoverageChip">＋0 new</span>
+      </div>
+    </div>
+    <button id="sentenceBtn" class="sentenceBtn">🔁 Hear Again</button>
+  </section>
+
+  <main>
+    <div id="syllableArea"></div>
+    <div id="trayWrap">
+      <div class="trayHead"><div class="trayTitle">Sound Tile Bank</div><div class="trayHelp">Tap anywhere on a tile = hear its sound • Drag only = move or reorder it</div></div>
+      <div id="phonogramTray"></div>
+    </div>
+  </main>
+
+  <footer>
+    <div id="feedback">Ready to spell.</div>
+    <div class="actions">
+      <button id="clearBtn" class="smallBtn">↺ Clear</button>
+      <button id="checkBtn" class="mainBtn">✓ Check</button>
+      <button id="nextBtn" class="mainBtn next hidden">Next →</button>
+    </div>
+    <div class="rightTools">
+      <button id="repeatSoundsBtn" class="smallBtn">🔉 Replay Tiles</button>
+      <button id="dancePreviewBtn" class="smallBtn" type="button">💃 Preview Dance</button>
+      <button id="teacherBtn" class="smallBtn" title="Teacher">T</button>
+    </div>
+  </footer>
+</div>
+
+<div id="loadingScreen">
+  <div class="modal"><div class="loader"></div><h2>Preparing the phonograms…</h2><p id="loadingText">Loading your P3 SDR spelling sound system and word sets.</p></div>
+</div>
+<div id="startScreen" class="hidden">
+  <div class="modal startAdventure">
+    <div style="font-size:64px">🏁 🎧 🧩</div>
+    <div class="startBadge">Phonogram Coverage Challenge</div>
+    <h2>Choose Your Game</h2>
+    <p>Choose 1 player or 2 players. The game selects words that help each active player cover phonograms not yet used.</p>
+
+    <div class="modeChooser" aria-label="Choose game mode">
+      <button id="mode1Btn" class="modeBtn active" type="button">👤 1 Player</button>
+      <button id="mode2Btn" class="modeBtn" type="button">👥 2 Players</button>
+    </div>
+
+    <div class="nameGrid">
+      <div class="nameBox">
+        <label for="player1Input">Player 1</label>
+        <input id="player1Input" maxlength="18" value="Player 1" autocomplete="off">
+      </div>
+      <div class="nameBox" id="player2Box">
+        <label for="player2Input">Player 2</label>
+        <input id="player2Input" maxlength="18" value="Player 2" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="rulesBox" id="rulesBox">
+      <b>Goal:</b> complete 6 short missions of 10 words each. The six stars show the full journey. The selected words collectively cover every taught phonogram at least once.<br>
+      <b>Scoring:</b> 10 points for a first-try spelling, 6 after self-correction, plus 1 point for each newly covered phonogram.<br>
+      <b>1 player:</b> finish all 6 missions to complete the challenge.<br>
+      <b>2 players:</b> each mission has 10 words total — 5 words per pupil. Players alternate turns. Each word allows only 2 tries; after 2 incorrect tries, that word scores 0.
+    </div>
+
+    <div class="coverageLegend">
+      <span class="legendChip">🔊 Tap = hear phoneme</span>
+      <span class="legendChip">↔ Drag = move/reorder</span>
+      <span class="legendChip">✓ Correct word = coverage</span>
+    </div>
+    <button id="startBtn" class="bigStart" style="margin-top:15px">▶ Start 1-Player Quest</button>
+    <button id="resumeBtn" class="bigStart resumeBtn hidden" type="button">▶ Continue Saved Game</button>
+    <div class="saveNote">Progress is saved automatically on this browser/device.</div>
+  </div>
+</div>
+<div id="teacherPanel" class="hidden">
+  <div class="modal">
+    <h2>Teacher Controls</h2>
+    <div class="teacherRow"><button id="resetProgress" class="danger" type="button">Hold 5 sec to Reset</button><button id="closeTeacher" class="close">Close</button></div>
+    <div style="font-size:12px;color:#63798a;margin:6px 0">Dance Preview button is protected by password <b>67</b>.</div>
+    <div id="bankStatus"></div>
+    <div class="coverageTokens" id="coverageTokenList"></div>
+  </div>
+</div>
+<div id="rewardToast" aria-live="polite">
+  <div id="rewardIcon">🌟</div>
+  <div id="rewardTitle">Sound Map Complete!</div>
+  <div id="rewardWord"></div>
+  <div id="rewardSub">Great listening and spelling.</div>
+</div>
+<div id="winnerScreen" class="hidden">
+  <div class="modal">
+    <div class="winnerCup">🏆</div>
+    <div id="winnerTitle">Phonogram Champions!</div>
+    <div id="winnerSummary"></div>
+    <button id="playAgainBtn" class="bigStart" style="margin-top:15px">Play Again</button>
+  </div>
+</div>
+
+<div id="missionDanceScreen" class="hidden" aria-live="polite">
+  <div class="danceCard">
+    <div class="danceBadge" id="danceBadge">Mission Celebration</div>
+    <div id="danceTitle">Mission Complete!</div>
+    <div id="danceNote">Great work!</div>
+    <div class="danceStage">
+      <div class="danceStars">
+        <span class="danceSpark s1">✨</span>
+        <span class="danceSpark s2">⭐</span>
+        <span class="danceSpark s3">✨</span>
+        <span class="danceSpark s4">⭐</span>
+      </div>
+      <span class="danceNoteFloat n1">♫</span>
+      <span class="danceNoteFloat n2">♪</span>
+      <span class="danceNoteFloat n3">♫</span>
+      <span class="danceNoteFloat n4">♪</span>
+      <div class="danceTile one">sh</div>
+      <div class="danceTile two">oa</div>
+      <div class="danceTile three">ch</div>
+      <div class="danceFloor"></div>
+    </div>
+    <div class="danceActions">
+      <button id="danceContinueBtn" type="button">Continue →</button>
+      <button id="danceClosePreviewBtn" class="hidden" type="button">Close Preview</button>
+    </div>
+  </div>
+</div>
+
+<div id="confetti"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  const SOURCE_BASE = 'https://cdn.jsdelivr.net/gh/limkimsze-maker/P3_SDR_Spelling@main/';
+  const SOUND_BASE = SOURCE_BASE + 'sounds/';
+  const STORAGE_KEY = 'phonogramCoverageMissionsV14';
+
+  const SOUND_TOKEN_FILE_OVERRIDES = {
+    s_z:'z', ve:'v', our_:'er_', wh_h:'h', es_sound:'es'
+  };
+  const TTS_SOUND_OVERRIDES = {
+    watch:'watch', laughed:'laughed', tough:'tough', no:'nuh', es:'is', scared:'scared'
+  };
+  const SCHWA_MP4_ONLY = new Set(['a_','e_','i_','o_','u_','ai_','ar_','ay_','ea_','er_','ir_','or_','ur_']);
+  const MISSION_NOTES = [
+    '',
+    'Great start! Your careful listening is helping you notice the sounds hiding inside words. Your sound-detective ears are switched on!',
+    'Brilliant work! You are getting stronger at breaking words into syllables and building them piece by piece.',
+    'Excellent! You are making stronger links between the sounds you hear and the phonograms that spell them.',
+    'Keep shining! You are checking, adjusting and trying again when needed. That perseverance is how strong spellers grow.',
+    'Fantastic! You are building words with more independence and confidence. You are very close to the finish!',
+    'Amazing! Six missions complete. You have travelled through the full phonogram challenge and built a powerful spelling toolkit!'
+  ];
+
+  const DISPLAY_OVERRIDES = {
+    a_:'a',a__:'a',e_:'e',e__:'e',i_:'i',i__:'i',o_:'o',o__:'o',u_:'u',u__:'u',
+    ai_:'ai',ar_:'ar',ay_:'ay',ea_:'ea',er_:'er',ir_:'ir',or_:'or',ur_:'ur',
+    ed_:'ed',ed__:'ed',ei_:'ei',ew_:'ew',ey_e:'ey',g_:'g',c_:'c',ie_:'ie',oo_:'oo',oo_o:'oo',
+    ow_:'ow',th_:'th',ue_:'ue',s_z:'s',y_e:'y',y_i:'y',aw_a:'a',wh_h:'wh',es_sound:'es',our_:'our'
+  };
+
+
+  const state = {
+    bank:{1:[],2:[],3:[],4:[],5:[]},
+    words:[],
+    challengeWords:[],
+    allTokens:[],
+    current:null,
+    mode:1,
+    missionSize:10,
+    totalMissions:6,
+    currentPlayer:0,
+    hasSavedProgress:false,
+    awaitingAdvance:false,
+    attemptsThisWord:0,
+    round:1,
+    players:[
+      {name:'Player 1',score:0,covered:new Set(),words:0,mission:1,missionWords:0,missionAttempts:0,firstTryWords:0,usedWords:new Set(),finished:false},
+      {name:'Player 2',score:0,covered:new Set(),words:0,mission:1,missionWords:0,missionAttempts:0,firstTryWords:0,usedWords:new Set(),finished:false}
+    ],
+    firstTry:true,
+    solved:false,
+    tileSeq:0,
+    newlyCovered:[]
+  };
+
+  const $ = s => document.querySelector(s);
+  const syllableArea=$('#syllableArea'), tray=$('#phonogramTray'), feedback=$('#feedback');
+  addTrayDropEvents();
+
+  function lessonFiles(){
+    const files=[];
+    for(let c=1;c<=18;c++) for(let s=1;s<=3;s++) files.push(`Cycle ${c} Session ${s}.json`);
+    for(let c=19;c<=26;c++) for(let l=1;l<=3;l++) files.push(`Cycle ${c} Level ${l}.json`);
+    return files;
+  }
+
+  async function loadCorpus(){
+    const files=lessonFiles();
+    const loaded=[];
+    let done=0;
+    await Promise.all(files.map(async f=>{
+      try{
+        const r=await fetch(SOURCE_BASE+encodeURIComponent(f),{cache:'force-cache'});
+        if(!r.ok) throw new Error(String(r.status));
+        const j=await r.json();
+        if(Array.isArray(j.words)) loaded.push(...j.words);
+      }catch(e){}
+      finally{
+        done++;
+        if(done%6===0) $('#loadingText').textContent=`Loading spelling sets… ${done} / ${files.length}`;
+      }
+    }));
+
+    const combined=[...loaded];
+    const seen=new Set();
+    const tokenMap=new Map();
+    combined.forEach(w=>{
+      if(!w || !w.word || !Array.isArray(w.syllables) || !w.syllables.length) return;
+      if(w.syllables.some(s=>!Array.isArray(s.letters)||!s.letters.length)) return;
+
+      const n=w.syllables.length;
+      const key=w.word.toLowerCase()+'|'+n;
+      if(seen.has(key)) return;
+      seen.add(key);
+
+      // Count only phonograms that occur in words the game can actually present.
+      w.syllables.forEach(s=>(s.letters||[]).forEach(t=>{
+        const k=String(t||'').trim();
+        if(k) tokenMap.set(k.toLowerCase(),k);
+      }));
+
+      if(state.bank[n]) state.bank[n].push(w);
+      state.words.push(w);
+    });
+    state.allTokens=[...tokenMap.values()];
+    buildCoverageDeck();
+
+    if(!state.words.length){
+      $('#loadingText').textContent='No spelling words could be loaded from the P3 SDR Spelling repository.';
+      return;
+    }
+    $('#loadingScreen').classList.add('hidden');
+    $('#startScreen').classList.remove('hidden');
+    $('#bankStatus').textContent=`Loaded ${state.words.length} source words. The game has built a ${state.challengeWords.length}-word challenge set that covers all taught phonogram/sound tokens.`;
+    $('#coverageTokenList').innerHTML='<b>Coverage target ('+state.allTokens.length+'):</b> '+state.allTokens.map(displayToken).join(' • ');
+    updateResumeButton();
+    updateStats();
+  }
+
+  function tokenKey(t){ return String(t||'').trim().toLowerCase(); }
+
+  function buildCoverageDeck(){
+    const remaining=new Set(state.allTokens.map(tokenKey));
+    const chosen=[];
+    const available=[...state.words];
+
+    // Greedy set-cover with a gentle preference for shorter/easier words.
+    // The resulting deck is not necessarily mathematically minimal, but is compact
+    // and guarantees that every counted phonogram appears at least once.
+    while(remaining.size && available.length){
+      let bestIndex=-1;
+      let bestScore=-Infinity;
+      let bestNew=[];
+
+      available.forEach((w,i)=>{
+        const keys=wordTokenKeys(w);
+        const fresh=keys.filter(k=>remaining.has(k));
+        if(!fresh.length) return;
+
+        const syllables=Math.max(1,w.syllables?.length||1);
+        const tileCount=(w.syllables||[]).reduce((sum,s)=>sum+(s.letters||[]).length,0);
+
+        // Coverage dominates; cognitive load breaks ties.
+        const score=fresh.length*100 - syllables*7 - tileCount*.6;
+        if(score>bestScore){
+          bestScore=score;
+          bestIndex=i;
+          bestNew=fresh;
+        }
+      });
+
+      if(bestIndex<0) break;
+      const [picked]=available.splice(bestIndex,1);
+      chosen.push(picked);
+      bestNew.forEach(k=>remaining.delete(k));
+    }
+
+    // Safety: if a token somehow remained, add the simplest source word containing it.
+    if(remaining.size){
+      [...remaining].forEach(k=>{
+        const candidates=state.words
+          .filter(w=>wordTokenKeys(w).includes(k) && !chosen.includes(w))
+          .sort((a,b)=>
+            (a.syllables.length-b.syllables.length) ||
+            (wordTokenKeys(a).length-wordTokenKeys(b).length)
+          );
+        if(candidates[0]){
+          chosen.push(candidates[0]);
+          wordTokenKeys(candidates[0]).forEach(x=>remaining.delete(x));
+        }
+      });
+    }
+
+    state.challengeWords=chosen;
+  }
+
+
+  function wordTokenKeys(w){
+    const set=new Set();
+    (w?.syllables||[]).forEach(s=>(s.letters||[]).forEach(t=>set.add(tokenKey(t))));
+    return [...set].filter(Boolean);
+  }
+
+  function loadProgress(){
+    try{
+      const raw=localStorage.getItem(STORAGE_KEY);
+      const p=raw ? JSON.parse(raw) : null;
+      if(p && Array.isArray(p.players) && p.players.length>=1){
+        state.hasSavedProgress=true;
+        state.mode=(p.mode===2)?2:1;
+        state.currentPlayer=(state.mode===2 && p.currentPlayer===1)?1:0;
+        state.round=Math.max(1,Number(p.round)||1);
+        state.awaitingAdvance=!!p.awaitingAdvance;
+
+        p.players.forEach((saved,i)=>{
+          if(!state.players[i]) return;
+          const pl=state.players[i];
+          pl.name=String(saved.name||`Player ${i+1}`).slice(0,18);
+          pl.score=Math.max(0,Number(saved.score)||0);
+          pl.words=Math.max(0,Number(saved.words)||0);
+          pl.mission=Math.min(state.totalMissions,Math.max(1,Number(saved.mission)||Math.floor(pl.words/state.missionSize)+1));
+          pl.missionWords=Math.max(0,Number(saved.missionWords)||0);
+          pl.missionAttempts=Math.max(0,Number(saved.missionAttempts)||0);
+          pl.firstTryWords=Math.max(0,Number(saved.firstTryWords)||0);
+          pl.covered=new Set(Array.isArray(saved.covered)?saved.covered:[]);
+          pl.usedWords=new Set(Array.isArray(saved.usedWords)?saved.usedWords:[]);
+          pl.finished=!!saved.finished;
+        });
+
+        $('#player1Input').value=state.players[0].name||'Player 1';
+        if(state.players[1]?.name) $('#player2Input').value=state.players[1].name;
+      }
+    }catch(e){
+      state.hasSavedProgress=false;
+    }
+    setMode(state.mode,true);
+    updateResumeButton();
+    updateStats();
+  }
+
+  function saveProgress(){
+    const players=state.players.map(p=>({
+      name:p.name,score:p.score,words:p.words,mission:p.mission,missionWords:p.missionWords,missionAttempts:p.missionAttempts,
+      firstTryWords:p.firstTryWords,finished:p.finished,
+      covered:[...p.covered],usedWords:[...p.usedWords]
+    }));
+    localStorage.setItem(STORAGE_KEY,JSON.stringify({
+      mode:state.mode,currentPlayer:state.currentPlayer,round:state.round,
+      awaitingAdvance:state.awaitingAdvance,players
+    }));
+    state.hasSavedProgress=true;
+    updateResumeButton();
+  }
+
+  function updateResumeButton(){
+    const btn=$('#resumeBtn');
+    if(!btn) return;
+    btn.classList.toggle('hidden',!state.hasSavedProgress);
+    if(state.hasSavedProgress){
+      const label=state.mode===1 ? 'Continue Saved 1-Player Game' : 'Continue Saved 2-Player Game';
+      btn.textContent=`▶ ${label}`;
+    }
+  }
+
+  function resumeSavedGame(){
+    if(!state.hasSavedProgress) return;
+    $('#startScreen').classList.add('hidden');
+
+    const activePlayers=state.mode===1 ? [state.players[0]] : state.players;
+    if(activePlayers.every(p=>p.finished)){
+      showWinner();
+      return;
+    }
+
+    if(state.awaitingAdvance) advanceTurn();
+    else nextWord();
+  }
+
+  function coveragePct(player){
+    const quota=playerMissionQuota();
+    const done=state.mode===2 ? player.missionAttempts : player.missionWords;
+    return Math.min(100,Math.round(done/Math.max(1,quota)*100));
+  }
+
+  function setMode(mode,updateText=true){
+    state.mode=(mode===2)?2:1;
+    $('#mode1Btn')?.classList.toggle('active',state.mode===1);
+    $('#mode2Btn')?.classList.toggle('active',state.mode===2);
+    $('#player2Box')?.classList.toggle('hiddenField',state.mode===1);
+    $('#playerCard1')?.classList.toggle('soloCardHide',state.mode===1);
+    if(updateText){
+      const btn=$('#startBtn');
+      if(btn) btn.textContent=state.mode===1 ? '▶ Start 1-Player Quest' : '▶ Start 2-Player Race';
+      const sub=document.querySelector('header .sub');
+      if(sub) sub.textContent=state.mode===1 ? '1-Player Coverage Quest • Hear • Build • Spell' : '2-Player Coverage Race • Hear • Build • Spell';
+    }
+  }
+
+  function playerMissionQuota(){
+    return state.mode===2 ? 5 : state.missionSize;
+  }
+
+  function twoPlayerMissionComplete(){
+    if(state.mode!==2) return false;
+    return state.players.every(p=>p.finished || p.missionAttempts>=5);
+  }
+
+  function completedMissionCount(player){
+    if(state.mode===2){
+      const m=Math.min(state.players[0].mission||1,state.players[1].mission||1);
+      return Math.min(state.totalMissions,Math.max(0,m-1));
+    }
+    return Math.min(state.totalMissions,Math.floor(player.words/state.missionSize));
+  }
+
+  function updateMissionStars(justEarnedMission=0){
+    const p=state.players[state.currentPlayer] || state.players[0];
+    const completed=completedMissionCount(p);
+    $('#roadmapName').textContent=state.mode===2?'Team Mission Stars':`${p.name || 'Player'}'s Mission Stars`;
+
+    document.querySelectorAll('[data-mission-star]').forEach(star=>{
+      const n=Number(star.dataset.missionStar);
+      const earned=n<=completed;
+      star.textContent=earned?'★':'☆';
+      star.classList.toggle('earned',earned);
+      star.classList.toggle('justEarned',n===justEarnedMission);
+      if(n===justEarnedMission){
+        setTimeout(()=>star.classList.remove('justEarned'),2600);
+      }
+    });
+  }
+
+  function updateStats(){
+    const total=state.allTokens.length;
+    state.players.forEach((p,i)=>{
+      if(!$(`#playerName${i}`)) return;
+      $(`#playerName${i}`).textContent=p.name;
+      $(`#playerScore${i}`).textContent=`${p.score} pts`;
+      $(`#coverageText${i}`).textContent=state.mode===2 ? `${p.missionAttempts} / 5 words` : `${p.missionWords} / ${state.missionSize} words`;
+      $(`#coverageFill${i}`).style.width=`${coveragePct(p)}%`;
+      $(`#playerCard${i}`).classList.toggle('active',i===state.currentPlayer&&!p.finished&&!(state.mode===1&&i===1));
+      $(`#playerCard${i}`).classList.toggle('finished',p.finished&&!(state.mode===1&&i===1));
+    });
+    const p=state.players[state.currentPlayer];
+    $('#turnBanner').textContent=p.finished?'✓ Coverage complete':(state.mode===1?`🎯 ${p.name}'s quest`:`🏁 ${p.name}'s turn`);
+    $('#missionChip').textContent=state.mode===2 ? `📝 Mission ${p.mission} • 5 words each` : `📝 Mission ${p.mission} • ${p.missionWords}/${state.missionSize} words`;
+    updateMissionStars();
+  }
+
+  function displayToken(t){
+    const k=String(t||'').trim();
+    return DISPLAY_OVERRIDES[k] || k.replace(/_+$/,'');
+  }
+  function isSchwa(t){ return SCHWA_MP4_ONLY.has(String(t||'').toLowerCase()); }
+
+  let voices=[];
+  function refreshVoices(){voices=window.speechSynthesis?window.speechSynthesis.getVoices():[]}
+  if('speechSynthesis' in window){refreshVoices();speechSynthesis.onvoiceschanged=refreshVoices}
+  function britishVoice(){
+    const gb=voices.filter(v=>/^en-GB/i.test(v.lang));
+    const preferred=gb.find(v=>/sonia|serena|kate|female|google uk english female/i.test(v.name));
+    return preferred||gb[0]||voices.find(v=>/^en/i.test(v.lang))||null;
+  }
+  function speak(text,rate=.76,showListening=false){
+    if(!('speechSynthesis' in window)||!text) return;
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);u.lang='en-GB';u.rate=rate;u.pitch=1.02;u.volume=1;
+    const v=britishVoice();if(v)u.voice=v;
+    if(showListening){
+      const bar=document.querySelector('.listenBar'),logo=document.querySelector('.logo');
+      u.onstart=()=>{bar?.classList.add('listening');logo?.classList.add('listening')};
+      const stop=()=>{bar?.classList.remove('listening');logo?.classList.remove('listening')};
+      u.onend=stop;u.onerror=stop;
+    }
+    speechSynthesis.speak(u);
+  }
+  const SENTENCE_OVERRIDES = {
+    sun: 'The sun shines brightly in the sky.',
+    shrug: 'He gave a shrug when he did not know the answer.'
+  };
+
+  function getExampleSentence(){
+    if(!state.current) return '';
+
+    const word=String(state.current.word||'').trim().toLowerCase();
+    const source=String(state.current.meaning||'').trim();
+
+    // Newer spelling entries contain an explicit Sentence: line.
+    const explicit=source.match(/Sentence:\s*([^\n\r]+)/i);
+    if(explicit) return explicit[1].trim();
+
+    // Some older P3 SDR spelling entries contain only a meaning.
+    // Use a natural example sentence where one has been supplied.
+    if(SENTENCE_OVERRIDES[word]) return SENTENCE_OVERRIDES[word];
+
+    // Final safeguard: never omit the middle sentence.
+    // Turn the source meaning into a complete spoken sentence.
+    let meaning=source
+      .replace(/^Meaning:\s*/i,'')
+      .replace(/[.\s]+$/,'')
+      .trim();
+
+    if(meaning){
+      return `The word ${state.current.word} means ${meaning}.`;
+    }
+
+    return `This spelling word is ${state.current.word}.`;
+  }
+
+  function speakWord(){
+    if(!state.current) return;
+    const word=String(state.current.word||'').trim();
+    const sentence=getExampleSentence();
+    const prompt=sentence
+      ? `Spell ${word}. ${sentence} Spell ${word}.`
+      : `Spell ${word}. Spell ${word}.`;
+    speak(prompt,.74,true);
+  }
+
+  function speakSentence(){ speakWord(); }
+
+  function playPhoneme(token){
+    const k=String(token||'').trim().toLowerCase(); if(!k)return;
+    if(TTS_SOUND_OVERRIDES[k]){speak(TTS_SOUND_OVERRIDES[k],.62);return}
+    const audioKey=SOUND_TOKEN_FILE_OVERRIDES[k]||k;
+    const encoded=encodeURIComponent(audioKey);
+    const urls=SCHWA_MP4_ONLY.has(audioKey)
+      ? [`${SOUND_BASE}${encoded}.mp4`]
+      : ['m4a','mp4','mp3','wav','ogg','aac','webm'].map(ext=>`${SOUND_BASE}${encoded}.${ext}`);
+    let i=0;
+    const tryNext=()=>{
+      if(i>=urls.length){speak(displayToken(k),.58);return}
+      const a=new Audio(urls[i++]);a.volume=1;a.onended=()=>{};a.onerror=tryNext;
+      const p=a.play();if(p&&p.catch)p.catch(tryNext);
+    };
+    tryNext();
+  }
+
+  function shuffle(a){
+    const x=[...a];for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]]}return x;
+  }
+  function chooseCoverageWord(player){
+    const allKeys=state.allTokens.map(tokenKey);
+    const remaining=new Set(allKeys.filter(k=>!player.covered.has(k)));
+    let pool=state.challengeWords.filter(w=>!player.usedWords.has(String(w.word).toLowerCase()));
+    if(!pool.length){
+      // Safety fallback: if coverage somehow remains, allow unused source words
+      // containing an uncovered phonogram.
+      pool=state.words.filter(w=>
+        !player.usedWords.has(String(w.word).toLowerCase()) &&
+        wordTokenKeys(w).some(k=>remaining.has(k))
+      );
+    }
+    if(!pool.length) return null;
+
+    const total=Math.max(1,state.allTokens.length);
+    const progress=player.covered.size/total;
+
+    // Hidden difficulty ramp: keep early rounds accessible, then widen naturally.
+    // The pupil only sees phonogram coverage, not a separate syllable "level".
+    const softMaxSyllables =
+      progress < .25 ? 1 :
+      progress < .50 ? 2 :
+      progress < .72 ? 3 :
+      progress < .88 ? 4 : 99;
+
+    const analyse = words => words.map(w=>{
+      const keys=wordTokenKeys(w);
+      const newCount=keys.filter(k=>remaining.has(k)).length;
+      const syllables=w.syllables.length;
+      const score=newCount*100 - syllables*7 - keys.length*.35 + Math.random()*7;
+      return {w,newCount,score};
+    });
+
+    let scored=analyse(pool.filter(w=>w.syllables.length<=softMaxSyllables));
+    let useful=scored.filter(x=>x.newCount>0).sort((a,b)=>b.score-a.score);
+
+    // If the remaining phonogram requires a harder word, allow it immediately.
+    if(!useful.length){
+      scored=analyse(pool);
+      useful=scored.filter(x=>x.newCount>0).sort((a,b)=>b.score-a.score);
+    }
+
+    if(useful.length){
+      const top=useful.slice(0,Math.min(6,useful.length));
+      return top[Math.floor(Math.random()*top.length)].w;
+    }
+
+    scored.sort((a,b)=>a.w.syllables.length-b.w.syllables.length||b.score-a.score);
+    return scored[0]?.w||null;
+  }
+
+  function nextWord(){
+    const activePlayers=state.mode===1 ? [state.players[0]] : state.players;
+    if(activePlayers.every(p=>p.finished)){
+      showWinner();
+      return;
+    }
+    if(state.mode===2 && state.players[state.currentPlayer].finished){
+      state.currentPlayer=1-state.currentPlayer;
+    } else if(state.mode===1){
+      state.currentPlayer=0;
+    }
+
+    const enteringPlayer=state.players[state.currentPlayer];
+    if(state.mode===1 && !enteringPlayer.finished && enteringPlayer.missionWords>=state.missionSize){
+      enteringPlayer.mission=Math.min(state.totalMissions,enteringPlayer.mission+1);
+      enteringPlayer.missionWords=0;
+    }
+
+    state.awaitingAdvance=false;
+    state.attemptsThisWord=0;
+    state.solved=false;
+    state.firstTry=true;
+    state.newlyCovered=[];
+    $('#checkBtn').classList.remove('hidden');
+    $('#nextBtn').classList.add('hidden');
+    $('#newCoverageChip').classList.add('hidden');
+    $('#revealedWord')?.remove();
+    $('#promptTitle').innerHTML='Listen: word → sentence → word. Then build it by syllables.';
+    $('#promptHint').textContent='Tap any phonogram to hear its phoneme. Drag phonograms to move or reorder them.';
+    feedback.classList.remove('feedbackGood','feedbackTry');
+    feedback.textContent=`${state.players[state.currentPlayer].name}, your phonogram challenge is ready!`;
+
+    const player=state.players[state.currentPlayer];
+    state.current=chooseCoverageWord(player);
+    if(!state.current){
+      feedback.textContent='No spelling word is available.';
+      return;
+    }
+    buildRound();
+    updateStats();
+    saveProgress();
+    setTimeout(speakWord,250);
+  }
+
+  function buildRound(){
+    const n=state.current.syllables.length;
+    syllableArea.style.gridTemplateColumns=`repeat(${n},minmax(0,1fr))`;
+    syllableArea.innerHTML='';tray.innerHTML='';state.tileSeq=0;
+    for(let i=0;i<n;i++){
+      const box=document.createElement('div');box.className='syllableBox';box.dataset.index=i;box.dataset.label=`Syllable ${i+1}`;
+      box.innerHTML='<span class="emptyHint">Drop phonograms here</span>';
+      addDropEvents(box);syllableArea.appendChild(box);
+    }
+
+    const required=[];
+    state.current.syllables.forEach((s,sy)=>s.letters.forEach(tok=>required.push({token:String(tok),sy})));
+    const usedDisplays=new Set(required.map(x=>displayToken(x.token).toLowerCase()));
+    const distractorCount=Math.min(8,2+Math.max(0,state.current.syllables.length-1)*2);
+    const candidates=shuffle(state.allTokens).filter(t=>{
+      const d=displayToken(t).toLowerCase();
+      if(!d||usedDisplays.has(d)||d.length>7)return false;
+      usedDisplays.add(d);return true;
+    }).slice(0,distractorCount).map(token=>({token,sy:null}));
+    shuffle([...required,...candidates]).forEach(info=>tray.appendChild(makeTile(info.token)));
+    updateEmptyHints();
+  }
+
+  let suppressNextTileClick=false;
+
+  function pulseAndPlayTile(el){
+    el.classList.remove('soundPulse');
+    void el.offsetWidth;
+    el.classList.add('soundPulse');
+    setTimeout(()=>el.classList.remove('soundPulse'),460);
+    playPhoneme(el.dataset.token);
+  }
+
+  function moveTileTo(target,el,beforeEl=null){
+    if(!target||!el||state.solved) return;
+
+    if(beforeEl && beforeEl!==el && beforeEl.parentElement===target){
+      target.insertBefore(el,beforeEl);
+    }else{
+      target.appendChild(el);
+    }
+
+    el.classList.toggle('placed',target.classList.contains('syllableBox'));
+    el.classList.add('dropPop');
+    setTimeout(()=>el.classList.remove('dropPop'),320);
+
+    document.querySelectorAll('.syllableBox').forEach(b=>b.classList.remove('ok','bad','dragover'));
+    tray.classList.remove('dragover');
+    updateEmptyHints();
+  }
+
+  function getInsertBeforeElement(container,clientX,clientY,draggedEl){
+    const tiles=[...container.querySelectorAll(':scope > .tile')]
+      .filter(t=>t!==draggedEl);
+
+    if(!tiles.length) return null;
+
+    // Syllable boxes are laid out left-to-right.
+    // Insert before the first tile whose centre is to the right of the drop point.
+    for(const tile of tiles){
+      const r=tile.getBoundingClientRect();
+      const centreX=r.left+r.width/2;
+      if(clientX<centreX) return tile;
+    }
+    return null;
+  }
+
+  function makeTile(token){
+    const el=document.createElement('div');
+    el.className='tile'+(isSchwa(token)?' schwaMark':'');
+    el.textContent=displayToken(token);
+    el.dataset.token=token;
+    el.dataset.id='tile'+(++state.tileSeq);
+    el.draggable=true;
+
+    const dot=document.createElement('span');
+    dot.className='soundDot';
+    el.appendChild(dot);
+
+    // Mouse/trackpad: movement happens only by dragging.
+    el.addEventListener('dragstart',e=>{
+      if(state.solved){e.preventDefault();return;}
+      e.dataTransfer.setData('text/plain',el.dataset.id);
+      e.dataTransfer.effectAllowed='move';
+      el.classList.add('dragging');
+    });
+    el.addEventListener('dragend',()=>{
+      el.classList.remove('dragging');
+      document.querySelectorAll('.syllableBox').forEach(b=>b.classList.remove('dragover'));
+      tray.classList.remove('dragover');
+    });
+
+    // Clicking/tapping anywhere on a tile is sound-only.
+    el.addEventListener('click',e=>{
+      e.stopPropagation();
+      if(suppressNextTileClick){
+        suppressNextTileClick=false;
+        return;
+      }
+      pulseAndPlayTile(el);
+    });
+
+    // Touch/pen: distinguish tap from drag by movement threshold.
+    let pointerStart=null,ghost=null,touchDragging=false;
+    el.addEventListener('pointerdown',e=>{
+      if(e.pointerType==='mouse'||state.solved) return;
+      pointerStart={id:e.pointerId,x:e.clientX,y:e.clientY};
+      touchDragging=false;
+      try{el.setPointerCapture(e.pointerId)}catch(_){}
+    });
+    el.addEventListener('pointermove',e=>{
+      if(!pointerStart||e.pointerId!==pointerStart.id||e.pointerType==='mouse') return;
+      const dx=e.clientX-pointerStart.x,dy=e.clientY-pointerStart.y;
+      if(!touchDragging && Math.hypot(dx,dy)>9){
+        touchDragging=true;
+        ghost=el.cloneNode(true);
+        Object.assign(ghost.style,{
+          position:'fixed',left:'0px',top:'0px',zIndex:'9999',pointerEvents:'none',
+          opacity:'.92',width:`${el.getBoundingClientRect().width}px`,
+          transform:'translate(-50%,-50%) scale(1.04)'
+        });
+        document.body.appendChild(ghost);
+        el.style.opacity='.35';
+      }
+      if(touchDragging&&ghost){
+        ghost.style.left=`${e.clientX}px`;
+        ghost.style.top=`${e.clientY}px`;
+        e.preventDefault();
+      }
+    });
+    el.addEventListener('pointerup',e=>{
+      if(!pointerStart||e.pointerId!==pointerStart.id||e.pointerType==='mouse') return;
+      if(touchDragging){
+        suppressNextTileClick=true;
+        if(ghost) ghost.remove();
+        el.style.opacity='';
+        const hit=document.elementFromPoint(e.clientX,e.clientY);
+        const box=hit?.closest?.('.syllableBox');
+        const bank=hit?.closest?.('#phonogramTray');
+        if(box){
+          const before=getInsertBeforeElement(box,e.clientX,e.clientY,el);
+          moveTileTo(box,el,before);
+        }
+        else if(bank) moveTileTo(tray,el);
+        setTimeout(()=>{suppressNextTileClick=false},350);
+      }
+      pointerStart=null;ghost=null;touchDragging=false;
+      try{el.releasePointerCapture(e.pointerId)}catch(_){}
+    });
+    el.addEventListener('pointercancel',()=>{
+      if(ghost) ghost.remove();
+      el.style.opacity='';
+      pointerStart=null;ghost=null;touchDragging=false;
+    });
+
+    return el;
+  }
+
+  function addDropEvents(box){
+    box.addEventListener('dragover',e=>{e.preventDefault();box.classList.add('dragover')});
+    box.addEventListener('dragleave',()=>box.classList.remove('dragover'));
+    box.addEventListener('drop',e=>{
+      e.preventDefault();
+      box.classList.remove('dragover');
+      const id=e.dataTransfer.getData('text/plain');
+      const el=document.querySelector(`[data-id="${CSS.escape(id)}"]`);
+      if(el){
+        const before=getInsertBeforeElement(box,e.clientX,e.clientY,el);
+        moveTileTo(box,el,before);
+      }
+    });
+  }
+
+  function addTrayDropEvents(){
+    tray.addEventListener('dragover',e=>{e.preventDefault();tray.classList.add('dragover')});
+    tray.addEventListener('dragleave',e=>{
+      if(!tray.contains(e.relatedTarget)) tray.classList.remove('dragover');
+    });
+    tray.addEventListener('drop',e=>{
+      e.preventDefault();
+      tray.classList.remove('dragover');
+      const id=e.dataTransfer.getData('text/plain');
+      const el=document.querySelector(`[data-id="${CSS.escape(id)}"]`);
+      if(el) moveTileTo(tray,el);
+    });
+  }
+  function updateEmptyHints(){
+    document.querySelectorAll('.syllableBox').forEach(b=>{
+      let hint=b.querySelector('.emptyHint');const tiles=b.querySelectorAll('.tile').length;
+      if(tiles===0&&!hint){hint=document.createElement('span');hint.className='emptyHint';hint.textContent='Drop phonograms here';b.appendChild(hint)}
+      if(tiles>0&&hint)hint.remove();
+    });
+  }
+
+  function clearPlaced(){
+    if(state.solved)return;
+    document.querySelectorAll('.syllableBox .tile').forEach(t=>{t.classList.remove('placed');tray.appendChild(t)});
+    document.querySelectorAll('.syllableBox').forEach(b=>b.classList.remove('ok','bad'));
+    state.selectedId=null;updateEmptyHints();
+  }
+
+  function checkAnswer(){
+    if(state.solved)return;
+    const boxes=[...document.querySelectorAll('.syllableBox')];
+    const result=boxes.map((b,i)=>{
+      const got=[...b.querySelectorAll('.tile')].map(t=>t.dataset.token);
+      const want=state.current.syllables[i].letters.map(String);
+      const ok=got.length===want.length&&got.every((x,j)=>x===want[j]);
+      b.classList.toggle('ok',ok);b.classList.toggle('bad',!ok);return ok;
+    });
+    if(result.every(Boolean)){
+      state.attemptsThisWord++;
+      solveRound();
+    }else{
+      state.attemptsThisWord++;
+      state.firstTry=false;
+
+      if(state.mode===2 && state.attemptsThisWord>=2){
+        failWordAfterTwoTries();
+        return;
+      }
+
+      feedback.classList.remove('feedbackGood');
+      feedback.classList.add('feedbackTry');
+      const locked=result.filter(Boolean).length;
+      feedback.textContent=state.mode===2
+        ? `Try 1 of 2 used. One more try! Listen carefully and adjust the phonograms.`
+        : (locked
+            ? `Nice start — ${locked} of ${result.length} syllable ${result.length===1?'is':'are'} locked in. Listen again and adjust the rest.`
+            : `Keep listening — tap the phonograms again and rebuild the sound pattern.`);
+      tone(false);
+      setTimeout(()=>boxes.forEach(b=>b.classList.remove('bad')),900);
+    }
+  }
+
+  function revealCorrectWord(){
+    document.querySelectorAll('.syllableBox').forEach((box,i)=>{
+      box.innerHTML='';
+      const syll=state.current?.syllables?.[i];
+      (syll?.letters||[]).forEach(token=>{
+        const tile=makeTile(token);
+        tile.classList.add('placed');
+        tile.draggable=false;
+        box.appendChild(tile);
+      });
+      box.classList.remove('bad');
+      box.classList.add('ok');
+    });
+    updateEmptyHints();
+  }
+
+  function failWordAfterTwoTries(){
+    state.solved=true;
+    const player=state.players[state.currentPlayer];
+
+    // The failed word counts as one of this pupil's five mission words,
+    // but earns no score and does not add phonogram coverage.
+    player.words++;
+    player.missionAttempts++;
+    player.usedWords.add(state.current.word.toLowerCase());
+
+    revealCorrectWord();
+    $('#promptTitle').innerHTML=`Correct spelling: <span id="revealedWord">${escapeHtml(state.current.word)}</span>`;
+    $('#promptHint').textContent='Two tries used. This word scores 0 points.';
+    feedback.classList.remove('feedbackGood');
+    feedback.classList.add('feedbackTry');
+    feedback.textContent=`Two tries used — 0 points for this word. Look at the correct spelling, then continue.`;
+    tone(false);
+
+    state.awaitingAdvance=true;
+    saveProgress();
+    updateStats();
+
+    document.querySelectorAll('.tile').forEach(t=>t.draggable=false);
+    $('#checkBtn').classList.add('hidden');
+
+    const missionComplete=state.mode===2 && twoPlayerMissionComplete();
+    if(missionComplete){
+      $('#nextBtn').classList.add('hidden');
+      setTimeout(()=>completeTwoPlayerMission(),700);
+    }else{
+      $('#nextBtn').classList.remove('hidden');
+      $('#nextBtn').textContent='Next Player →';
+    }
+  }
+
+  function solveRound(){
+    state.solved=true;
+    const player=state.players[state.currentPlayer];
+    const wasFirst=state.firstTry;
+    const keys=wordTokenKeys(state.current);
+    const oldCoverage=new Set(player.covered);
+
+    keys.forEach(k=>player.covered.add(k));
+    state.newlyCovered=keys.filter(k=>!oldCoverage.has(k));
+
+    player.words++;
+    player.missionWords++;
+    if(state.mode===2) player.missionAttempts++;
+    player.usedWords.add(state.current.word.toLowerCase());
+    if(wasFirst) player.firstTryWords++;
+    player.score += (state.attemptsThisWord<=1?10:6) + state.newlyCovered.length;
+
+    const total=state.allTokens.length;
+    const allCoverageReached=total>0 && player.covered.size>=total;
+    const targetWords=state.missionSize*state.totalMissions;
+    const justFinished=state.mode===1
+      ? (player.words>=targetWords && allCoverageReached && !player.finished)
+      : false;
+    const missionComplete=state.mode===2
+      ? twoPlayerMissionComplete()
+      : player.missionWords>=state.missionSize;
+
+    if(justFinished) player.finished=true;
+
+    state.awaitingAdvance=true;
+    saveProgress();
+    updateStats();
+    tone(true);
+    confetti();
+    if(missionComplete && state.mode===2){
+      $('#nextBtn').classList.add('hidden');
+      setTimeout(()=>completeTwoPlayerMission(),450);
+    }else if(missionComplete){
+      updateMissionStars(player.mission);
+      setTimeout(()=>showMissionDance(player.mission,false),350);
+    }else{
+      showReward(justFinished,false);
+    }
+
+    $('#promptTitle').innerHTML=`Correct: <span id="revealedWord">${escapeHtml(state.current.word)}</span>`;
+    $('#promptHint').textContent=meaningOnly(state.current.meaning)||'Well done!';
+
+    if(state.newlyCovered.length){
+      $('#newCoverageChip').textContent=`＋${state.newlyCovered.length} new: ${state.newlyCovered.map(k=>displayToken(k)).join(', ')}`;
+      $('#newCoverageChip').classList.remove('hidden');
+    }
+
+    feedback.classList.remove('feedbackTry');
+    feedback.classList.add('feedbackGood');
+    feedback.textContent=justFinished
+      ? `🏁 ${player.name} has completed the full phonogram challenge!`
+      : missionComplete
+        ? `🎉 Mission ${player.mission} complete — ${state.missionSize} words finished!`
+        : `${wasFirst?'⭐ First try!':'✓ Correct!'} ${state.newlyCovered.length?`${state.newlyCovered.length} new phonogram${state.newlyCovered.length===1?'':'s'} covered.`:'These phonograms are now reinforced.'}`;
+
+    $('#checkBtn').classList.add('hidden');
+    $('#nextBtn').classList.remove('hidden');
+    if(missionComplete){
+      $('#nextBtn').classList.add('hidden');
+    }else if(state.mode===1){
+      $('#nextBtn').textContent=state.players[0].finished ? 'Results →' : 'Next Word →';
+    }else{
+      $('#nextBtn').textContent='Next Player →';
+    }
+    document.querySelectorAll('.tile').forEach(t=>t.draggable=false);
+  }
+
+  function meaningOnly(text){return (String(text||'').match(/Meaning:\s*(.+?)(?:\n|$)/i)||[])[1]||''}
+  function escapeHtml(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+  function completeTwoPlayerMission(){
+    if(state.mode!==2) return;
+    const mission=Math.max(1,state.players[0].mission);
+
+    // Both pupils earn the same mission star after 5 words each.
+    state.players.forEach(p=>{
+      p.missionWords=0;
+      p.missionAttempts=0;
+      if(mission>=state.totalMissions){
+        p.finished=true;
+      }else{
+        p.mission=Math.min(state.totalMissions,p.mission+1);
+      }
+    });
+
+    state.awaitingAdvance=true;
+    saveProgress();
+
+    // Show the just-completed mission on the star road before advancing.
+    const current=state.players[state.currentPlayer];
+    const oldMission=current.mission;
+    current.mission=mission+1;
+    updateMissionStars(mission);
+    current.mission=oldMission;
+
+    setTimeout(()=>showMissionDance(mission,false),250);
+  }
+
+  function missionNote(mission,playerName){
+    const base=MISSION_NOTES[Math.max(1,Math.min(state.totalMissions,mission))] || MISSION_NOTES[1];
+    if(state.mode===2) return `Both players, ${base.charAt(0).toLowerCase()+base.slice(1)}`;
+    return `${playerName ? playerName + ', ' : ''}${base.charAt(0).toLowerCase()+base.slice(1)}`;
+  }
+
+  function danceJingle(){
+    try{
+      const C=window.AudioContext||window.webkitAudioContext;
+      const ctx=new C();
+      const now=ctx.currentTime;
+      [523,659,784,1047,784,1047].forEach((f,i)=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.frequency.value=f;o.type='triangle';
+        const t=now+i*.11;
+        g.gain.setValueAtTime(.0001,t);
+        g.gain.exponentialRampToValueAtTime(.09,t+.018);
+        g.gain.exponentialRampToValueAtTime(.0001,t+.12);
+        o.connect(g);g.connect(ctx.destination);o.start(t);o.stop(t+.14);
+      });
+    }catch(e){}
+  }
+
+  function showMissionDance(mission,preview=false){
+    const p=state.players[state.currentPlayer] || state.players[0];
+    const m=Math.max(1,Math.min(state.totalMissions,Number(mission)||1));
+    $('#danceBadge').textContent=preview ? `Dance Preview • Mission ${m}` : `Mission ${m} Star Earned!`;
+    $('#danceTitle').textContent=preview ? 'Phonogram Dance Preview' : `⭐ Mission ${m} Complete!`;
+    $('#danceNote').textContent=preview
+      ? `Preview only — no progress is changed. ${MISSION_NOTES[m]}`
+      : missionNote(m,p.name);
+
+    $('#danceContinueBtn').classList.toggle('hidden',preview);
+    $('#danceClosePreviewBtn').classList.toggle('hidden',!preview);
+    $('#missionDanceScreen').classList.remove('hidden');
+    confetti();
+    danceJingle();
+  }
+
+  function closeMissionDance(){
+    $('#missionDanceScreen').classList.add('hidden');
+  }
+
+  function previewDance(){
+    const pass=prompt('Dance preview password:');
+    if(pass!=='67') return;
+    const p=state.players[state.currentPlayer] || state.players[0];
+    const mission=Math.max(1,Math.min(state.totalMissions,p?.mission||1));
+    showMissionDance(mission,true);
+  }
+
+  function showReward(completed=false,missionComplete=false){
+    const toast=$('#rewardToast');
+    const p=state.players[state.currentPlayer];
+
+    if(completed){
+      $('#rewardIcon').textContent='🏁';
+      $('#rewardTitle').textContent='Phonogram Challenge Complete!';
+      $('#rewardSub').textContent=`${p.name} has used every taught phonogram.`;
+    }else if(missionComplete){
+      $('#rewardIcon').textContent='🎉';
+      $('#rewardTitle').textContent=`Mission ${p.mission} Complete!`;
+      $('#rewardSub').textContent=`${state.missionSize} words completed. Progress saved.`;
+    }else{
+      $('#rewardIcon').textContent='🌟';
+      $('#rewardTitle').textContent='Word Complete!';
+      $('#rewardSub').textContent=state.newlyCovered.length
+        ? `New coverage: ${state.newlyCovered.map(k=>displayToken(k)).join(' • ')}`
+        : 'Phonograms reinforced!';
+    }
+
+    $('#rewardWord').textContent=state.current?.word||'';
+    toast.classList.remove('show');
+    void toast.offsetWidth;
+    toast.classList.add('show');
+    setTimeout(()=>toast.classList.remove('show'),1650);
+  }
+
+  function showWinner(){
+    updateStats();
+    if(state.mode===1){
+      const p=state.players[0];
+      $('#winnerTitle').textContent=`🏆 Well done, ${escapeHtml(p.name)}!`;
+      $('#winnerSummary').innerHTML=
+        `<b>Score:</b> ${p.score} points<br>`+
+        `<b>First-try words:</b> ${p.firstTryWords}/${p.words}<br>`+
+        `<b>Words completed:</b> ${p.words}<br><b>Missions completed:</b> ${state.totalMissions}/${state.totalMissions}<br><b>Stars earned:</b> ★★★★★★<br><b>Coverage:</b> All taught phonograms covered.`;
+    }else{
+      const [a,b]=state.players;
+      let title='🤝 It’s a tie!';
+      if(a.score>b.score) title=`🏆 ${a.name} wins!`;
+      else if(b.score>a.score) title=`🏆 ${b.name} wins!`;
+      $('#winnerTitle').textContent=title;
+      $('#winnerSummary').innerHTML=
+        `<b>${escapeHtml(a.name)}</b>: ${a.score} points • ${a.firstTryWords}/${a.words} first-try words<br>`+
+        `<b>${escapeHtml(b.name)}</b>: ${b.score} points • ${b.firstTryWords}/${b.words} first-try words<br><br>`+
+        `Both players completed all ${state.totalMissions} missions — 5 words each per mission.`;
+    }
+    $('#winnerScreen').classList.remove('hidden');
+    confetti();
+  }
+
+  function tone(good){
+    try{
+      const C=window.AudioContext||window.webkitAudioContext;const ctx=new C();const now=ctx.currentTime;
+      const seq=good?[523,659,784]:[220,185];seq.forEach((f,i)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=f;o.type='sine';g.gain.setValueAtTime(.0001,now+i*.12);g.gain.exponentialRampToValueAtTime(.12,now+i*.12+.02);g.gain.exponentialRampToValueAtTime(.0001,now+i*.12+.16);o.connect(g);g.connect(ctx.destination);o.start(now+i*.12);o.stop(now+i*.12+.18)});
+    }catch(e){}
+  }
+  function confetti(){
+    const c=$('#confetti');c.innerHTML='';const colors=['#2f7de1','#f4b942','#2e9d63','#d95a63','#7657c7'];
+    for(let i=0;i<60;i++){
+      const p=document.createElement('i');p.className='confettiPiece';p.style.left=Math.random()*100+'vw';p.style.background=colors[i%colors.length];p.style.animationDelay=Math.random()*.35+'s';p.style.setProperty('--drift',(Math.random()*180-90)+'px');c.appendChild(p)
+    }
+    setTimeout(()=>c.innerHTML='',2300);
+  }
+
+  async function replayTraySounds(){
+    const tiles=[...tray.querySelectorAll('.tile')];
+    for(const t of tiles){playPhoneme(t.dataset.token);await new Promise(r=>setTimeout(r,520))}
+  }
+
+  function openTeacher(){
+    const pass=prompt('Teacher password:');
+    if(pass!=='67') return;
+    const total=state.allTokens.length;
+    if(state.mode===1){
+      $('#bankStatus').textContent=`10-word missions. ${state.players[0].name}: Mission ${state.players[0].mission}, ${state.players[0].missionWords}/${state.missionSize} words. Total completed: ${state.players[0].words}.`;
+    }else{
+      $('#bankStatus').textContent=`2-player mode: 10 words per mission, 5 per pupil. ${state.players[0].name}: ${state.players[0].missionAttempts}/5; ${state.players[1].name}: ${state.players[1].missionAttempts}/5.`;
+    }
+    $('#coverageTokenList').innerHTML='<b>Coverage target:</b> '+state.allTokens.map(displayToken).join(' • ');
+    $('#teacherPanel').classList.remove('hidden');
+  }
+
+  function startRace(){
+    if(state.hasSavedProgress){
+      const ok=confirm('Start a new game? This will replace the saved progress on this device.');
+      if(!ok) return;
+    }
+    const n1=String($('#player1Input').value||'Player 1').trim().slice(0,18)||'Player 1';
+    const n2=String($('#player2Input').value||'Player 2').trim().slice(0,18)||'Player 2';
+    if(state.mode===1){
+      state.players=[
+        {name:n1,score:0,covered:new Set(),words:0,mission:1,missionWords:0,missionAttempts:0,firstTryWords:0,usedWords:new Set(),finished:false},
+        {name:'',score:0,covered:new Set(),words:0,mission:1,missionWords:0,missionAttempts:0,firstTryWords:0,usedWords:new Set(),finished:true}
+      ];
+    }else{
+      state.players=[
+        {name:n1,score:0,covered:new Set(),words:0,mission:1,missionWords:0,missionAttempts:0,firstTryWords:0,usedWords:new Set(),finished:false},
+        {name:n2,score:0,covered:new Set(),words:0,mission:1,missionWords:0,missionAttempts:0,firstTryWords:0,usedWords:new Set(),finished:false}
+      ];
+    }
+    state.currentPlayer=0;
+    state.round=1;
+    localStorage.removeItem(STORAGE_KEY);
+    state.hasSavedProgress=false;
+    state.awaitingAdvance=false;
+    $('#startScreen').classList.add('hidden');
+    updateStats();
+    saveProgress();
+    nextWord();
+  }
+
+  function advanceTurn(){
+    const activePlayers=state.mode===1 ? [state.players[0]] : state.players;
+    if(activePlayers.every(p=>p.finished)){
+      state.awaitingAdvance=false;
+      saveProgress();
+      showWinner();
+      return;
+    }
+    if(state.mode===2){
+      const other=1-state.currentPlayer;
+      if(!state.players[other].finished && state.players[other].missionAttempts<5){
+        state.currentPlayer=other;
+      }else if(state.players[state.currentPlayer].missionAttempts>=5 && !state.players[other].finished){
+        state.currentPlayer=other;
+      }
+    }else{
+      state.currentPlayer=0;
+    }
+    state.round++;
+    state.awaitingAdvance=false;
+    saveProgress();
+    nextWord();
+  }
+
+  function resetRace(){
+    localStorage.removeItem(STORAGE_KEY);
+    state.hasSavedProgress=false;
+    state.awaitingAdvance=false;
+    state.players=[
+      {name:'Player 1',score:0,covered:new Set(),words:0,mission:1,missionWords:0,missionAttempts:0,firstTryWords:0,usedWords:new Set(),finished:false},
+      {name:'Player 2',score:0,covered:new Set(),words:0,mission:1,missionWords:0,missionAttempts:0,firstTryWords:0,usedWords:new Set(),finished:false}
+    ];
+    state.mode=1;
+    state.currentPlayer=0;
+    state.round=1;
+    state.current=null;
+    $('#teacherPanel').classList.add('hidden');
+    $('#winnerScreen').classList.add('hidden');
+    $('#missionDanceScreen').classList.add('hidden');
+    $('#player1Input').value='Player 1';
+    $('#player2Input').value='Player 2';
+    setMode(1,true);
+    updateResumeButton();
+    $('#startScreen').classList.remove('hidden');
+    updateStats();
+  }
+
+  $('#mode1Btn').addEventListener('click',()=>setMode(1,true));
+  $('#mode2Btn').addEventListener('click',()=>setMode(2,true));
+  $('#startBtn').addEventListener('click',startRace);
+  $('#resumeBtn').addEventListener('click',resumeSavedGame);
+  $('#hearWordBtn').addEventListener('click',speakWord);
+  $('#sentenceBtn').addEventListener('click',speakSentence);
+  $('#clearBtn').addEventListener('click',clearPlaced);
+  $('#checkBtn').addEventListener('click',checkAnswer);
+  $('#nextBtn').addEventListener('click',advanceTurn);
+  $('#repeatSoundsBtn').addEventListener('click',replayTraySounds);
+  $('#dancePreviewBtn').addEventListener('click',previewDance);
+  $('#danceClosePreviewBtn').addEventListener('click',closeMissionDance);
+  $('#danceContinueBtn').addEventListener('click',()=>{
+    closeMissionDance();
+
+    if(state.mode===2){
+      if(state.players.every(p=>p.finished)){
+        state.awaitingAdvance=false;
+        saveProgress();
+        showWinner();
+        return;
+      }
+      state.currentPlayer=0;
+      state.awaitingAdvance=false;
+      saveProgress();
+      nextWord();
+      return;
+    }
+
+    advanceTurn();
+  });
+  $('#teacherBtn').addEventListener('click',openTeacher);
+  $('#closeTeacher').addEventListener('click',()=>$('#teacherPanel').classList.add('hidden'));
+  const resetBtn=$('#resetProgress');
+  let resetHoldStart=0, resetHoldRaf=0, resetHoldActive=false;
+
+  function cancelResetHold(){
+    resetHoldActive=false;
+    cancelAnimationFrame(resetHoldRaf);
+    resetBtn.classList.remove('holding');
+    resetBtn.style.setProperty('--hold','0%');
+    resetBtn.textContent='Hold 5 sec to Reset';
+  }
+
+  function runResetHold(now){
+    if(!resetHoldActive) return;
+    const elapsed=now-resetHoldStart;
+    const pct=Math.min(100,elapsed/5000*100);
+    const seconds=Math.max(0,Math.ceil((5000-elapsed)/1000));
+    resetBtn.style.setProperty('--hold',`${pct}%`);
+    resetBtn.textContent=seconds>0 ? `Keep holding… ${seconds}` : 'Resetting…';
+
+    if(elapsed>=5000){
+      resetHoldActive=false;
+      cancelAnimationFrame(resetHoldRaf);
+      resetBtn.classList.remove('holding');
+      resetBtn.style.setProperty('--hold','0%');
+      resetRace();
+      resetBtn.textContent='Hold 5 sec to Reset';
+      return;
+    }
+    resetHoldRaf=requestAnimationFrame(runResetHold);
+  }
+
+  function beginResetHold(e){
+    if(e && e.button!==undefined && e.button!==0) return;
+    resetHoldActive=true;
+    resetHoldStart=performance.now();
+    resetBtn.classList.add('holding');
+    try{resetBtn.setPointerCapture?.(e.pointerId)}catch(_){}
+    resetHoldRaf=requestAnimationFrame(runResetHold);
+  }
+
+  resetBtn.addEventListener('pointerdown',beginResetHold);
+  resetBtn.addEventListener('pointerup',cancelResetHold);
+  resetBtn.addEventListener('pointercancel',cancelResetHold);
+  resetBtn.addEventListener('lostpointercapture',()=>{ if(resetHoldActive) cancelResetHold(); });
+  resetBtn.addEventListener('contextmenu',e=>e.preventDefault());
+  $('#playAgainBtn').addEventListener('click',()=>{
+    $('#winnerScreen').classList.add('hidden');
+    resetRace();
+  });
+
+  setMode(1,true);
+  loadProgress();loadCorpus();
+})();
+</script>
+</body>
+</html>
