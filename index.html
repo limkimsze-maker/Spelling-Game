@@ -401,7 +401,98 @@
         '<b>2 players:</b> 60 different words in total — 10 per mission, 5 per pupil. Players alternate turns and share one no-repeat word pool. Random Mission reshuffles the shared 10-word mission before it starts. Each word allows only 2 tries; after 2 incorrect tries, that word scores 0.'
       );
 
-      html=html.replace('</head>',responsiveCSS+'\n</head>');
+      const freshnessCSS=`
+<style id="fresh-play-style">
+  #freshDecor{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+  .freshFloat{position:absolute;font-size:clamp(20px,3vw,40px);opacity:.14;animation:freshDrift 8s ease-in-out infinite alternate;filter:saturate(.9)}
+  .freshFloat:nth-child(1){left:3%;top:14%}.freshFloat:nth-child(2){right:4%;top:22%;animation-delay:-2s}
+  .freshFloat:nth-child(3){left:7%;bottom:13%;animation-delay:-4s}.freshFloat:nth-child(4){right:7%;bottom:10%;animation-delay:-1s}
+  @keyframes freshDrift{from{transform:translateY(-7px) rotate(-5deg)}to{transform:translateY(10px) rotate(7deg)}}
+  #app{position:relative;z-index:1}
+  .freshMoodChip{border-color:rgba(118,87,199,.25)!important;background:rgba(255,255,255,.8)!important;color:#53697a!important;box-shadow:0 2px 6px rgba(42,62,80,.07)}
+  .freshFlash{animation:freshFlash .55s ease-out}
+  @keyframes freshFlash{0%{transform:scale(.96);opacity:.45}70%{transform:scale(1.03);opacity:1}100%{transform:scale(1);opacity:1}}
+  @media(max-width:620px){.freshFloat:nth-child(3),.freshFloat:nth-child(4){display:none}.freshMoodChip{font-size:8.5px!important;padding:2px 5px!important}}
+  @media(prefers-reduced-motion:reduce){.freshFloat{animation:none}.freshFlash{animation:none}}
+</style>`;
+
+      const freshnessJS=`<script id="fresh-play-script">
+(()=>{
+  const themes=[
+    {name:'Sky Adventure',icon:'☁️',bg1:'#e7f5ff',bg2:'#fff2d9',accent:'#3b82d0',accent2:'#7657c7',soft:'#eaf4ff',decor:['☁️','⭐','🪁','✨']},
+    {name:'Garden Trail',icon:'🌱',bg1:'#eaf9ee',bg2:'#fff4dc',accent:'#2e9d63',accent2:'#5a8f4b',soft:'#e8f7ec',decor:['🌱','🌼','🍃','🐞']},
+    {name:'Ocean Quest',icon:'🌊',bg1:'#e4f7fb',bg2:'#fff0df',accent:'#2186a5',accent2:'#526bc1',soft:'#e7f6fa',decor:['🌊','🐚','🫧','🐠']},
+    {name:'Star Mission',icon:'✨',bg1:'#eeeaff',bg2:'#fff2d6',accent:'#7657c7',accent2:'#3d7ac5',soft:'#f1edff',decor:['✨','⭐','🪐','🌙']},
+    {name:'Rainbow Route',icon:'🌈',bg1:'#f0eeff',bg2:'#fff0e5',accent:'#7a62c9',accent2:'#d06f8c',soft:'#f4f0ff',decor:['🌈','✨','☁️','⭐']},
+    {name:'Sunny Safari',icon:'☀️',bg1:'#fff6db',bg2:'#eaf7ee',accent:'#d28b28',accent2:'#4f9a67',soft:'#fff5da',decor:['☀️','🌿','🦋','🌼']},
+    {name:'Arctic Spark',icon:'❄️',bg1:'#eaf8ff',bg2:'#f2efff',accent:'#4b91c4',accent2:'#8066c7',soft:'#edf8ff',decor:['❄️','✨','🧊','⭐']},
+    {name:'Festival Fun',icon:'🎈',bg1:'#fff0ed',bg2:'#ecf7ff',accent:'#d36d83',accent2:'#4b8fc0',soft:'#fff1f2',decor:['🎈','🎉','⭐','🎵']}
+  ];
+  const welcomes=['Fresh words, fresh challenge!','A new sound adventure begins!','Ready for a different mission today?','Listen closely — something new is waiting!','New look, new mission, same sound power!','Let the next spelling adventure begin!'];
+  const missionLines=['Sound detective mode!','Listen, build and discover!','A fresh sound trail awaits!','New mission, new surprises!','Find the sounds hiding in the words!','Build it one sound at a time!'];
+  let lastTheme=-1;
+  let lastMission='';
+
+  function pickTheme(){
+    if(themes.length<2) return 0;
+    let n=Math.floor(Math.random()*themes.length);
+    if(n===lastTheme) n=(n+1+Math.floor(Math.random()*(themes.length-1)))%themes.length;
+    lastTheme=n;
+    return n;
+  }
+
+  function ensureFreshUI(){
+    let decor=document.getElementById('freshDecor');
+    if(!decor){
+      decor=document.createElement('div');decor.id='freshDecor';decor.setAttribute('aria-hidden','true');
+      for(let i=0;i<4;i++){const s=document.createElement('span');s.className='freshFloat';decor.appendChild(s)}
+      document.body.prepend(decor);
+    }
+    let mood=document.getElementById('freshMoodChip');
+    const strip=document.querySelector('.missionStrip');
+    if(!mood && strip){mood=document.createElement('span');mood.id='freshMoodChip';mood.className='missionChip freshMoodChip';strip.appendChild(mood)}
+    return {decor,mood};
+  }
+
+  function applyFreshTheme(reason){
+    const t=themes[pickTheme()];
+    const ui=ensureFreshUI();
+    document.documentElement.style.setProperty('--bg1',t.bg1);
+    document.documentElement.style.setProperty('--bg2',t.bg2);
+    document.body.style.background='linear-gradient(135deg,'+t.bg1+','+t.bg2+')';
+    const logo=document.querySelector('.logo');
+    if(logo){logo.textContent=t.icon;logo.style.background='linear-gradient(145deg,'+t.accent+','+t.accent2+')';logo.classList.remove('freshFlash');void logo.offsetWidth;logo.classList.add('freshFlash')}
+    const listen=document.querySelector('.listenBar');if(listen) listen.style.borderColor=t.accent+'44';
+    const road=document.querySelector('.missionRoadmap');if(road) road.style.borderColor=t.accent+'33';
+    const trayHead=document.querySelector('.trayHead');if(trayHead) trayHead.style.background=t.soft;
+    const start=document.querySelector('.startBadge');
+    if(start) start.textContent=t.icon+' '+t.name+' • '+welcomes[Math.floor(Math.random()*welcomes.length)];
+    const hero=document.querySelector('#startScreen .startAdventure > div[style*="font-size"]');
+    if(hero) hero.textContent=t.icon+' 🎧 🧩';
+    if(ui.mood){ui.mood.textContent=t.icon+' '+t.name+' • '+missionLines[Math.floor(Math.random()*missionLines.length)];ui.mood.classList.remove('freshFlash');void ui.mood.offsetWidth;ui.mood.classList.add('freshFlash')}
+    [...ui.decor.children].forEach((el,i)=>{el.textContent=t.decor[i%t.decor.length]});
+  }
+
+  function watchMission(){
+    const chip=document.getElementById('missionChip');
+    if(!chip) return;
+    const m=(chip.textContent.match(/Mission\s+(\d+)/i)||[])[1]||'';
+    if(m && m!==lastMission){lastMission=m;applyFreshTheme('mission')}
+  }
+
+  const missionChip=document.getElementById('missionChip');
+  if(missionChip){new MutationObserver(watchMission).observe(missionChip,{childList:true,subtree:true,characterData:true})}
+  document.getElementById('startBtn')?.addEventListener('click',()=>setTimeout(()=>applyFreshTheme('new-game'),20),true);
+  document.getElementById('resumeBtn')?.addEventListener('click',()=>setTimeout(()=>applyFreshTheme('resume'),20),true);
+  document.getElementById('randomMissionBtn')?.addEventListener('click',()=>setTimeout(()=>applyFreshTheme('random'),20),true);
+  document.getElementById('playAgainBtn')?.addEventListener('click',()=>setTimeout(()=>{lastMission='';applyFreshTheme('play-again')},60),true);
+  applyFreshTheme('load');
+  watchMission();
+})();
+<\/script>`;
+
+      html=html.replace('</head>',responsiveCSS+'\n'+freshnessCSS+'\n</head>');
+      html=html.replace('</body>',freshnessJS+'\n</body>');
       document.open();
       document.write(html);
       document.close();
