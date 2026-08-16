@@ -45,9 +45,9 @@
         "      const teamworkPatch=teamworkResponse.ok?await teamworkResponse.text():'';",
         "      const teamworkRelaxedPatch=teamworkRelaxedResponse.ok?await teamworkRelaxedResponse.text():'';",
         "      const teamworkPromptFixPatch=teamworkPromptFixResponse.ok?await teamworkPromptFixResponse.text():'';",
-        "      const combinedPatch=internalPatch+'\n'+adjustmentPatch+'\n'+creditPatch+'\n'+matchPatch+'\n'+teamworkPatch+'\n'+teamworkRelaxedPatch+'\n'+teamworkPromptFixPatch;",
+        "      const combinedPatch=internalPatch+'\\n'+adjustmentPatch+'\\n'+creditPatch+'\\n'+matchPatch+'\\n'+teamworkPatch+'\\n'+teamworkRelaxedPatch+'\\n'+teamworkPromptFixPatch;",
         "      if(combinedPatch.trim()){",
-        "        html=html.replace('  setMode(1,true);\n  loadProgress();loadCorpus();',combinedPatch+'\n\n  setMode(1,true);\n  loadProgress();loadCorpus();');",
+        "        html=html.replace('  setMode(1,true);\\n  loadProgress();loadCorpus();',combinedPatch+'\\n\\n  setMode(1,true);\\n  loadProgress();loadCorpus();');",
         "      }"
       ].join('\n');
 
