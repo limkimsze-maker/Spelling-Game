@@ -20,6 +20,7 @@
     const STABLE_WRAPPER='https://raw.githubusercontent.com/limkimsze-maker/Spelling-Game/07e9499cfd626c14715fc956e2fb7e14fda749b4/index.html';
     const PATCH='https://raw.githubusercontent.com/limkimsze-maker/Spelling-Game/main/game-patch.js?v=20260816g';
     const ADJUST='https://raw.githubusercontent.com/limkimsze-maker/Spelling-Game/main/bank-adjustment-v2.js?v=20260816a';
+    const CREDIT='https://raw.githubusercontent.com/limkimsze-maker/Spelling-Game/main/credit.js?v=20260816a';
     try{
       const r=await fetch(STABLE_WRAPPER,{cache:'no-store'});
       if(!r.ok) throw new Error('Could not load stable game wrapper');
@@ -28,9 +29,11 @@
       const injection=[
         "      const patchResponse=await fetch('"+PATCH+"',{cache:'no-store'});",
         "      const adjustResponse=await fetch('"+ADJUST+"',{cache:'no-store'});",
+        "      const creditResponse=await fetch('"+CREDIT+"',{cache:'no-store'});",
         "      const internalPatch=patchResponse.ok?await patchResponse.text():'';",
         "      const adjustmentPatch=adjustResponse.ok?await adjustResponse.text():'';",
-        "      const combinedPatch=internalPatch+'\\n'+adjustmentPatch;",
+        "      const creditPatch=creditResponse.ok?await creditResponse.text():'';",
+        "      const combinedPatch=internalPatch+'\\n'+adjustmentPatch+'\\n'+creditPatch;",
         "      if(combinedPatch.trim()){",
         "        html=html.replace('  setMode(1,true);\\n  loadProgress();loadCorpus();',combinedPatch+'\\n\\n  setMode(1,true);\\n  loadProgress();loadCorpus();');",
         "      }"
