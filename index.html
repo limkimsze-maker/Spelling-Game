@@ -26,6 +26,7 @@
     const TEAMWORK_RELAXED='https://raw.githubusercontent.com/limkimsze-maker/Spelling-Game/main/teamwork-relaxed.js?v=20260816a';
     const TEAMWORK_PROMPT_FIX='https://raw.githubusercontent.com/limkimsze-maker/Spelling-Game/main/teamwork-prompt-fix.js?v=20260816c';
     const TEAMWORK_HEARTS='https://raw.githubusercontent.com/limkimsze-maker/Spelling-Game/main/teamwork-hearts.js?v=20260816a';
+    const SPELLING_GAME_NAME='https://raw.githubusercontent.com/limkimsze-maker/Spelling-Game/main/spelling-game-name.js?v=20260816a';
     try{
       const r=await fetch(STABLE_WRAPPER,{cache:'no-store'});
       if(!r.ok) throw new Error('Could not load stable game wrapper');
@@ -40,6 +41,7 @@
         "      const teamworkRelaxedResponse=await fetch('"+TEAMWORK_RELAXED+"',{cache:'no-store'});",
         "      const teamworkPromptFixResponse=await fetch('"+TEAMWORK_PROMPT_FIX+"',{cache:'no-store'});",
         "      const teamworkHeartsResponse=await fetch('"+TEAMWORK_HEARTS+"',{cache:'no-store'});",
+        "      const spellingGameNameResponse=await fetch('"+SPELLING_GAME_NAME+"',{cache:'no-store'});",
         "      const internalPatch=patchResponse.ok?await patchResponse.text():'';",
         "      const adjustmentPatch=adjustResponse.ok?await adjustResponse.text():'';",
         "      const creditPatch=creditResponse.ok?await creditResponse.text():'';",
@@ -48,7 +50,8 @@
         "      const teamworkRelaxedPatch=teamworkRelaxedResponse.ok?await teamworkRelaxedResponse.text():'';",
         "      const teamworkPromptFixPatch=teamworkPromptFixResponse.ok?await teamworkPromptFixResponse.text():'';",
         "      const teamworkHeartsPatch=teamworkHeartsResponse.ok?await teamworkHeartsResponse.text():'';",
-        "      const combinedPatch=internalPatch+'\\n'+adjustmentPatch+'\\n'+creditPatch+'\\n'+matchPatch+'\\n'+teamworkPatch+'\\n'+teamworkRelaxedPatch+'\\n'+teamworkPromptFixPatch+'\\n'+teamworkHeartsPatch;",
+        "      const spellingGameNamePatch=spellingGameNameResponse.ok?await spellingGameNameResponse.text():'';",
+        "      const combinedPatch=internalPatch+'\\n'+adjustmentPatch+'\\n'+creditPatch+'\\n'+matchPatch+'\\n'+teamworkPatch+'\\n'+teamworkRelaxedPatch+'\\n'+teamworkPromptFixPatch+'\\n'+teamworkHeartsPatch+'\\n'+spellingGameNamePatch;",
         "      if(combinedPatch.trim()){",
         "        html=html.replace('  setMode(1,true);\\n  loadProgress();loadCorpus();',combinedPatch+'\\n\\n  setMode(1,true);\\n  loadProgress();loadCorpus();');",
         "      }"
