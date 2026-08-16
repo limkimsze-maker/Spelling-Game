@@ -4,7 +4,7 @@
   let lastTeamworkResult=null;
   let teamworkIntroShownForThisRun=false;
   let teamworkIntroContinue=null;
-  let teamworkIntroSafetyTimer=0;
+  let teamworkIntroWaitTimer=0;
   let partnerHelpTimer=0;
 
   function currentTeamCorrect(){
@@ -54,48 +54,88 @@
         <div class="teamworkIntroRule"><b>🤝 If Try 1 is wrong</b><span>Help your partner say the <strong>sounds or syllables</strong> slowly.</span></div>
         <div class="teamworkIntroRule teamworkIntroDont"><b>✋ Remember</b><span>Do not give the spelling.</span></div>
         <div class="teamworkIntroSmall">You can compete for the match win and still earn the Teamwork Star together.</div>
-        <button id="teamworkIntroContinueBtn" type="button">Start Match →</button>
+        <div id="teamworkIntroStatus" class="teamworkIntroStatus">🔊 Listen to the teamwork rules…</div>
+        <button id="teamworkIntroContinueBtn" type="button" disabled>🔊 Listen first…</button>
       </div>`;
     document.body.appendChild(screen);
     document.getElementById('teamworkIntroContinueBtn')?.addEventListener('click',finishTeamworkIntro);
     return screen;
   }
 
+  function setTeamworkIntroReady(){
+    clearTimeout(teamworkIntroWaitTimer);
+    teamworkIntroWaitTimer=0;
+    const btn=document.getElementById('teamworkIntroContinueBtn');
+    const status=document.getElementById('teamworkIntroStatus');
+    if(btn){
+      btn.disabled=false;
+      btn.textContent='Start Match →';
+      btn.dataset.ready='1';
+    }
+    if(status) status.textContent='✓ Teamwork rules finished. Ready to start!';
+  }
+
   function finishTeamworkIntro(){
     if(!teamworkIntroContinue) return;
-    clearTimeout(teamworkIntroSafetyTimer);
-    teamworkIntroSafetyTimer=0;
-    try{window.speechSynthesis?.cancel();}catch(e){}
+    const btn=document.getElementById('teamworkIntroContinueBtn');
+    if(btn?.dataset.ready!=='1') return;
+    clearTimeout(teamworkIntroWaitTimer);
+    teamworkIntroWaitTimer=0;
     document.getElementById('teamworkIntroScreen')?.classList.add('hidden');
     const go=teamworkIntroContinue;
     teamworkIntroContinue=null;
     go();
   }
 
+  function waitUntilTeamworkSpeechReallyEnds(){
+    clearTimeout(teamworkIntroWaitTimer);
+    const check=()=>{
+      const synth=window.speechSynthesis;
+      if(!synth || (!synth.speaking && !synth.pending)){
+        setTeamworkIntroReady();
+        return;
+      }
+      teamworkIntroWaitTimer=setTimeout(check,350);
+    };
+    teamworkIntroWaitTimer=setTimeout(check,350);
+  }
+
   function speakTeamworkIntro(){
     const text=`Teamwork challenge! You can both win a Teamwork Star by working together. As a team, spell at least ${TEAM_CORRECT_TARGET} out of 10 words correctly. If your partner gets the first try wrong, help by saying the sounds or syllables slowly together. Do not give the spelling. Work together and earn the star!`;
+    const btn=document.getElementById('teamworkIntroContinueBtn');
+    const status=document.getElementById('teamworkIntroStatus');
+    if(btn){btn.disabled=true;btn.dataset.ready='0';btn.textContent='🔊 Listen first…';}
+    if(status) status.textContent='🔊 Listen to the teamwork rules…';
+
     if(!('speechSynthesis' in window)){
-      teamworkIntroSafetyTimer=setTimeout(finishTeamworkIntro,6500);
+      if(status) status.textContent='Read the teamwork rules above, then start the match.';
+      setTeamworkIntroReady();
       return;
     }
     try{
       window.speechSynthesis.cancel();
       const u=new SpeechSynthesisUtterance(text);
-      u.lang='en-GB';u.rate=.78;u.pitch=1.03;u.volume=1;
+      u.lang='en-GB';u.rate=.76;u.pitch=1.03;u.volume=1;
       const v=typeof britishVoice==='function'?britishVoice():null;
       if(v) u.voice=v;
-      u.onend=()=>finishTeamworkIntro();
-      u.onerror=()=>{teamworkIntroSafetyTimer=setTimeout(finishTeamworkIntro,1200);};
+      u.onend=()=>setTeamworkIntroReady();
+      u.onerror=()=>waitUntilTeamworkSpeechReallyEnds();
       window.speechSynthesis.speak(u);
-      teamworkIntroSafetyTimer=setTimeout(finishTeamworkIntro,17000);
+      // Do not use a fixed cut-off timer. Some devices read this message more
+      // slowly than others. The button unlocks only after speechSynthesis has
+      // genuinely stopped speaking/pending (or the onend event fires).
+      waitUntilTeamworkSpeechReallyEnds();
     }catch(e){
-      teamworkIntroSafetyTimer=setTimeout(finishTeamworkIntro,4500);
+      if(status) status.textContent='Read the teamwork rules above, then start the match.';
+      setTeamworkIntroReady();
     }
   }
 
   function showTeamworkIntro(continueGame){
     const screen=ensureTeamworkIntro();
     teamworkIntroContinue=continueGame;
+    const btn=document.getElementById('teamworkIntroContinueBtn');
+    if(btn){btn.disabled=true;btn.dataset.ready='0';btn.textContent='🔊 Listen first…';}
     screen.classList.remove('hidden');
     speakTeamworkIntro();
   }
@@ -147,7 +187,7 @@
   resetRace=function(){
     teamworkIntroShownForThisRun=false;
     teamworkIntroContinue=null;
-    clearTimeout(teamworkIntroSafetyTimer);
+    clearTimeout(teamworkIntroWaitTimer);
     try{window.speechSynthesis?.cancel();}catch(e){}
     document.getElementById('teamworkIntroScreen')?.classList.add('hidden');
     hidePartnerHelpPrompt();
@@ -220,8 +260,10 @@
     .teamworkIntroCard h2{margin:7px 0 12px;color:#29485e;font-size:clamp(24px,5vw,34px)}
     .teamworkIntroRule{display:grid;grid-template-columns:minmax(120px,.7fr) 1.3fr;gap:10px;align-items:center;margin:8px 0;padding:10px 12px;border-radius:14px;background:#f5f9fc;border:2px solid #dce7ef;text-align:left;color:#4f687a;font-size:14px;line-height:1.35}
     .teamworkIntroRule b{color:#29485e}.teamworkIntroGoal{background:#fff8df;border-color:#f0d77b}.teamworkIntroDont{background:#fff3f3;border-color:#efc4c8}
-    .teamworkIntroSmall{margin:10px auto;color:#657d8e;font-size:12px;font-weight:800;max-width:500px;line-height:1.4}
+    .teamworkIntroSmall{margin:10px auto 6px;color:#657d8e;font-size:12px;font-weight:800;max-width:500px;line-height:1.4}
+    .teamworkIntroStatus{margin:5px auto 9px;color:#37699f;font-size:12px;font-weight:1000;min-height:17px}
     #teamworkIntroContinueBtn{border:none;border-radius:15px;padding:11px 22px;background:#2e9d63;color:#fff;font:inherit;font-size:17px;font-weight:1000;cursor:pointer;box-shadow:0 4px 0 #21804f}
+    #teamworkIntroContinueBtn:disabled{background:#aab8c2;color:#f7fafc;box-shadow:0 4px 0 #8997a0;cursor:not-allowed;opacity:1}
     .partnerHelpPrompt{position:fixed;left:50%;top:max(92px,13vh);transform:translateX(-50%);z-index:58;width:min(520px,90vw);padding:10px 14px;border-radius:16px;background:#fff8d8;border:3px solid #efcf62;box-shadow:0 12px 32px rgba(44,63,77,.2);text-align:center;color:#5d4a10;pointer-events:none;animation:teamHelpPop .25s ease-out}
     .partnerHelpPrompt b,.partnerHelpPrompt span,.partnerHelpPrompt small{display:block}.partnerHelpPrompt b{font-size:15px}.partnerHelpPrompt span{font-size:14px;font-weight:900;margin-top:2px}.partnerHelpPrompt small{font-size:11px;font-weight:900;margin-top:2px;color:#8b6511}
     @keyframes teamHelpPop{from{opacity:0;transform:translateX(-50%) scale(.88)}to{opacity:1;transform:translateX(-50%) scale(1)}}
