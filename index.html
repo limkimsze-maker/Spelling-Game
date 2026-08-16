@@ -153,15 +153,78 @@
       let html=await response.text();
       html=html.replace(/<meta\s+name=["']viewport["'][^>]*>/i,'<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />');
 
-      // Never repeat a spelling word during the same game. In 2-player mode,
-      // the used-word pool is shared so Player 2 cannot receive Player 1's word.
+      // Fixed 60-word rule:
+      // - no spelling word can repeat anywhere in one game;
+      // - in 2-player mode the 60 words are shared across both pupils;
+      // - unused phonograms are prioritised until every taught phonogram has
+      //   appeared in at least one presented word;
+      // - after full coverage, unused source words fill the remaining slots.
+      const replacementChooseCoverageWord = `function chooseCoverageWord(player){
+    const allKeys=state.allTokens.map(tokenKey);
+    const globalUsedWords=new Set(state.players.flatMap(p=>[...p.usedWords].map(x=>String(x).toLowerCase())));
+
+    // Count phonograms from every word already presented, whether it was
+    // answered correctly or not. This makes the 60-word set itself the
+    // coverage guarantee.
+    const presentedCoverage=new Set();
+    state.words.forEach(w=>{
+      if(globalUsedWords.has(String(w.word).toLowerCase())){
+        wordTokenKeys(w).forEach(k=>presentedCoverage.add(k));
+      }
+    });
+    const remaining=new Set(allKeys.filter(k=>!presentedCoverage.has(k)));
+
+    // Every selection comes from globally unused words, so no repeat is
+    // possible between missions or between Player 1 and Player 2.
+    const unused=state.words.filter(w=>!globalUsedWords.has(String(w.word).toLowerCase()));
+    if(!unused.length) return null;
+
+    // While coverage is incomplete, prefer words from the compact coverage
+    // deck, then fall back to any unused source word containing a missing
+    // phonogram. Greedy scoring favours words that cover several missing
+    // phonograms at once.
+    if(remaining.size){
+      let coveragePool=state.challengeWords.filter(w=>
+        !globalUsedWords.has(String(w.word).toLowerCase()) &&
+        wordTokenKeys(w).some(k=>remaining.has(k))
+      );
+      if(!coveragePool.length){
+        coveragePool=unused.filter(w=>wordTokenKeys(w).some(k=>remaining.has(k)));
+      }
+      if(coveragePool.length){
+        const scored=coveragePool.map(w=>{
+          const keys=wordTokenKeys(w);
+          const fresh=keys.filter(k=>remaining.has(k)).length;
+          const syllables=Math.max(1,w.syllables?.length||1);
+          const tiles=(w.syllables||[]).reduce((sum,s)=>sum+(s.letters||[]).length,0);
+          return {w,score:fresh*100-syllables*7-tiles*.6+Math.random()*4};
+        }).sort((a,b)=>b.score-a.score);
+        return scored[0].w;
+      }
+    }
+
+    // Full phonogram coverage has already been achieved. Fill the rest of
+    // the 60 places with other unused words, gently preferring shorter words
+    // while retaining some variety.
+    const scored=unused.map(w=>{
+      const syllables=Math.max(1,w.syllables?.length||1);
+      const tiles=(w.syllables||[]).reduce((sum,s)=>sum+(s.letters||[]).length,0);
+      return {w,score:-(syllables*6+tiles*.35)+Math.random()*9};
+    }).sort((a,b)=>b.score-a.score);
+    const top=scored.slice(0,Math.min(8,scored.length));
+    return top[Math.floor(Math.random()*top.length)].w;
+  }`;
+
+      html=html.replace(/function chooseCoverageWord\(player\)\{[\s\S]*?\n  \}\n\n  function nextWord/,replacementChooseCoverageWord+'\n\n  function nextWord');
+
+      // Make the start-screen wording explicit about the fixed 60-word set.
       html=html.replace(
-        "let pool=state.challengeWords.filter(w=>!player.usedWords.has(String(w.word).toLowerCase()));",
-        "const globalUsedWords=new Set(state.players.flatMap(p=>[...p.usedWords].map(x=>String(x).toLowerCase())));\n    let pool=state.challengeWords.filter(w=>!globalUsedWords.has(String(w.word).toLowerCase()));"
+        '<b>Goal:</b> complete 6 short missions of 10 words each. The six stars show the full journey. The selected words collectively cover every taught phonogram at least once.',
+        '<b>Goal:</b> complete exactly 60 different words across 6 missions. No word repeats. The 60-word set covers every taught phonogram at least once.'
       );
       html=html.replace(
-        "!player.usedWords.has(String(w.word).toLowerCase()) &&\n        wordTokenKeys(w).some(k=>remaining.has(k))",
-        "!globalUsedWords.has(String(w.word).toLowerCase()) &&\n        wordTokenKeys(w).some(k=>remaining.has(k))"
+        '<b>2 players:</b> each mission has 10 words total — 5 words per pupil. Players alternate turns. Each word allows only 2 tries; after 2 incorrect tries, that word scores 0.',
+        '<b>2 players:</b> 60 different words in total — 10 per mission, 5 per pupil. Players alternate turns and share one no-repeat word pool. Each word allows only 2 tries; after 2 incorrect tries, that word scores 0.'
       );
 
       html=html.replace('</head>',responsiveCSS+'\n</head>');
