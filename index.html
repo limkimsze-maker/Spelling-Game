@@ -15,87 +15,175 @@
   <script src="https://cdn.counter.dev/script.js" data-id="825e93b6-ce99-40ef-8bcc-125f13297433" data-utcoffset="8"></script>
 </head>
 <body>
-  <div class="loading" id="loader"><div class="spinner"></div><strong>Loading Spelling Game…</strong><br><small>Preparing a fresh progressive mission.</small></div>
+  <div class="loading" id="loader"><div class="spinner"></div><strong>Loading Spelling Game…</strong></div>
   <script>
   (async()=>{
-    // Use the last complete version as the stable base, then add only the
-    // syllable-progression layer. This preserves Random Mission, fresh themes,
-    // responsive layout, scoring, saved progress and the 60-word rules.
-    const BASE='https://cdn.jsdelivr.net/gh/limkimsze-maker/Spelling-Game@696c23181f2211e4f420ab8226a2c81338478a3d/index.html';
+    const ORIGINAL='https://cdn.jsdelivr.net/gh/limkimsze-maker/Spelling-Game@e70af201de059406b5f124366ccc69387acfe62c/index.html';
+    const responsiveCSS=`
+<style id="universal-display-fix">
+  html,body{width:100%;height:100%;min-height:100%;overflow:hidden}
+  body{min-width:0}
+  #app{
+    width:min(1180px,100%);
+    height:100vh;
+    height:100dvh;
+    max-height:100dvh;
+    min-height:0;
+    padding:max(5px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));
+    gap:clamp(4px,1vh,8px)
+  }
+  header,.listenBar,main,footer,.brand,.promptText,.playerBoards,.playerCard{min-width:0}
+  h1{font-size:clamp(17px,2.5vw,31px);overflow:hidden;text-overflow:ellipsis}
+  .playerBoards{min-width:0;max-width:60%;flex:1}
+  .playerCard{min-width:0}
+  .modal,.danceCard{max-height:calc(100dvh - 24px);overflow:auto;-webkit-overflow-scrolling:touch}
+  #loadingScreen,#startScreen,#teacherPanel,#winnerScreen,#missionDanceScreen{
+    padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))
+  }
+  .randomMissionBtn{
+    display:inline-flex;align-items:center;justify-content:center;border:1.5px solid #e5bd45;
+    background:#fff1b8;color:#735913;cursor:pointer;box-shadow:0 2px 0 #cba63d;
+    transition:transform .08s,filter .12s
+  }
+  .randomMissionBtn:hover{filter:brightness(1.03)}
+  .randomMissionBtn:active{transform:translateY(1px);box-shadow:0 1px 0 #cba63d}
+  .randomMissionBtn:disabled{opacity:.45;cursor:not-allowed}
 
-    const progressionBridge=`<script id="progressive-difficulty-bridge">
-(()=>{
-  const nativeWrite=Document.prototype.write;
-  let armed=true;
-
-  const progressiveJS=\`<script id="progressive-syllable-difficulty">
-(()=>{
-  // Difficulty is a preference, never a hard restriction. Missing phonogram
-  // coverage always has priority over syllable length.
-  const profiles={
-    1:{1:48,2:5,3:-28,4:-48},
-    2:{1:36,2:24,3:-15,4:-34},
-    3:{1:22,2:36,3:2,4:-22},
-    4:{1:5,2:42,3:20,4:-5},
-    5:{1:-12,2:34,3:38,4:16},
-    6:{1:-24,2:25,3:46,4:34}
-  };
-
-  function currentDifficultyMission(){
-    if(state.mode===2){
-      const missions=state.players.map(p=>Math.max(1,Math.min(6,Number(p.mission)||1)));
-      return Math.max(1,Math.min(6,Math.min(...missions)));
-    }
-    const p=state.players[state.currentPlayer]||state.players[0];
-    return Math.max(1,Math.min(6,Number(p?.mission)||1));
+  @media(max-width:900px){
+    #app{width:100%}
+    header{gap:7px}
+    .brand{flex:1}
+    .playerBoards{max-width:58%;gap:5px}
+    .playerCard{width:auto;flex:1;max-width:none}
   }
 
-  function syllableCount(w){
-    return Math.max(1,Array.isArray(w?.syllables)?w.syllables.length:1);
+  @media(max-width:760px){
+    #app{padding:5px;gap:5px}
+    header{padding:6px 8px;gap:6px}
+    .logo{width:36px;height:36px;font-size:21px;border-radius:11px;flex:0 0 auto}
+    h1{font-size:clamp(16px,4.4vw,22px);white-space:normal;line-height:1.05}
+    .sub{display:none}
+    .playerBoards{max-width:56%;gap:4px}
+    .playerCard{padding:4px 5px;border-radius:11px}
+    .playerName{font-size:10px}.playerScore{font-size:9px}.coverageTrack{height:8px}.coverageText{display:none}
+    .missionRoadmap{margin:0 4px 5px;padding:4px 6px;gap:5px}
+    .roadmapName{display:none}.missionStars{gap:4px}.missionStar{font-size:22px}
+    .listenBar{grid-template-columns:auto minmax(0,1fr) auto;padding:6px;gap:5px;border-radius:14px}
+    .hearBtn{padding:9px 10px;font-size:14px;white-space:normal;line-height:1.05}
+    .sentenceBtn{padding:8px;font-size:10px;white-space:normal}
+    .promptTitle{font-size:clamp(12px,3.4vw,16px);line-height:1.08}
+    .promptHint{font-size:10px;line-height:1.05}
+    .missionStrip{gap:4px;margin-top:3px}
+    .turnBanner,.missionChip,.newCoverage{font-size:9px;padding:3px 6px}
+    main{padding:6px;gap:6px;grid-template-rows:minmax(86px,36%) minmax(0,1fr)}
+    #syllableArea{gap:5px}
+    .syllableBox{padding:26px 4px 4px;gap:4px;border-radius:13px;overflow:auto}
+    .syllableBox::before{font-size:9px;top:4px}
+    .emptyHint{font-size:10px}
+    #trayWrap{border-radius:13px}
+    .trayHead{padding:4px 6px}.trayTitle{font-size:11px}.trayHelp{display:none}
+    #phonogramTray{padding:5px;gap:5px;overflow:auto}
+    .tile{min-width:43px;height:43px;padding:0 8px;border-radius:11px;font-size:clamp(18px,4.8vw,25px)}
+    .tile.placed{min-width:40px;height:39px;font-size:clamp(17px,4.5vw,23px)}
+    footer{grid-template-columns:minmax(0,1fr) auto;gap:5px}
+    #feedback{font-size:11px;line-height:1.12;overflow:hidden}
+    .actions{gap:5px}.smallBtn{padding:7px 8px;font-size:11px}.mainBtn{min-width:90px;padding:8px 10px;font-size:13px}
+    .rightTools{display:none}
   }
 
-  function progressionValue(w,mission){
-    const s=syllableCount(w);
-    const p=profiles[mission]||profiles[1];
-    const base=p[Math.min(4,s)] ?? p[4];
-    // In later missions, very long words get a small extra lift; in early
-    // missions they remain possible only when coverage needs them.
-    const extra=s>4 ? (mission>=5 ? (s-4)*5 : -(s-4)*10) : 0;
-    return base+extra;
+  @media(max-width:520px) and (orientation:portrait){
+    header{display:grid;grid-template-columns:minmax(0,1fr);gap:4px}
+    .brand{justify-content:center;text-align:center}
+    .playerBoards{width:100%;max-width:none;gap:4px}
+    .playerCard{flex:1;width:auto;max-width:none}
+    .listenBar{grid-template-columns:auto minmax(0,1fr) auto}
+    .hearBtn{font-size:12px;padding:7px 8px;max-width:86px}
+    .sentenceBtn{font-size:9px;padding:6px;max-width:64px}
+    .promptTitle{font-size:12px}
+    .promptHint{display:none}
+    .missionStrip{gap:3px;margin-top:2px}
+    .turnBanner,.missionChip,.newCoverage{font-size:8.5px;padding:2px 5px}
+    main{grid-template-rows:minmax(76px,33%) minmax(0,1fr)}
+    .tile{min-width:39px;height:40px;padding:0 7px;font-size:clamp(17px,5.5vw,23px)}
+    .tile.placed{min-width:37px;height:37px;font-size:clamp(16px,5.1vw,21px)}
+    .modal{width:min(640px,96vw);padding:15px;border-radius:18px}
+    .modal h2{font-size:24px}.modal p{font-size:13px}
+    .nameGrid{gap:7px;margin:9px 0}.rulesBox{font-size:11px;padding:8px;line-height:1.35}
+    .bigStart{font-size:17px;padding:11px 18px}
   }
 
-  function tilesIn(w){
-    return (w?.syllables||[]).reduce((sum,s)=>sum+(s.letters||[]).length,0);
+  @media(max-height:700px){
+    #app{padding:4px 6px;gap:4px}
+    header{padding:4px 7px;border-radius:12px}
+    .logo{width:32px;height:32px;font-size:19px}.sub{display:none}
+    h1{font-size:17px}
+    .playerCard{padding:3px 5px}.coverageLine{margin-top:2px}
+    .missionRoadmap{margin:0 4px 3px;padding:2px 5px;border-radius:10px}
+    .missionStar{font-size:19px}.missionStars{gap:3px}
+    .listenBar{padding:4px 6px;gap:4px;border-radius:11px}
+    .hearBtn{padding:6px 9px;font-size:12px}.sentenceBtn{padding:6px 8px;font-size:9px}
+    .promptTitle{font-size:12px}.promptHint{display:none}
+    .missionStrip{margin-top:1px;gap:3px}.turnBanner,.missionChip,.newCoverage{padding:2px 5px;font-size:8.5px}
+    main{padding:5px;gap:4px;border-radius:12px;grid-template-rows:minmax(68px,32%) minmax(0,1fr)}
+    .syllableBox{padding:22px 4px 4px;border-radius:10px}.syllableBox::before{font-size:8px;top:3px}
+    .trayHead{padding:3px 5px}.trayTitle{font-size:10px}.trayHelp{display:none}
+    #phonogramTray{padding:4px;gap:4px}
+    .tile{height:38px;min-width:39px;padding:0 7px;font-size:18px;border-radius:9px}
+    .tile.placed{height:35px;min-width:36px;font-size:17px}
+    footer{gap:4px}.mainBtn{min-width:82px;padding:6px 9px;font-size:12px}.smallBtn{padding:6px 7px;font-size:10px}
+    #feedback{font-size:10px}
   }
 
-  function chooseProgressive(candidates,remaining,coverageFirst){
-    if(!candidates.length) return null;
-    const mission=currentDifficultyMission();
-    const scored=candidates.map(w=>{
-      const keys=wordTokenKeys(w);
-      const fresh=keys.filter(k=>remaining.has(k)).length;
-      // Coverage dominates. Difficulty shapes the choice only among words
-      // that are similarly useful for phonogram coverage.
-      const score=(coverageFirst?fresh*10000:0)+progressionValue(w,mission)*80-tilesIn(w)*.35+Math.random()*42;
-      return {w,fresh,score};
-    }).sort((a,b)=>b.score-a.score);
-
-    if(coverageFirst && scored[0]?.fresh>0){
-      const bestFresh=scored[0].fresh;
-      const sameCoverage=scored.filter(x=>x.fresh===bestFresh).slice(0,8);
-      const topScore=sameCoverage[0]?.score??0;
-      const close=sameCoverage.filter(x=>x.score>=topScore-120).slice(0,5);
-      const pool=close.length?close:sameCoverage;
-      return pool[Math.floor(Math.random()*pool.length)]?.w||scored[0].w;
-    }
-
-    const topScore=scored[0]?.score??0;
-    const close=scored.filter(x=>x.score>=topScore-150).slice(0,8);
-    const pool=close.length?close:scored.slice(0,5);
-    return pool[Math.floor(Math.random()*pool.length)]?.w||scored[0].w;
+  @media(max-height:520px){
+    #app{gap:3px;padding:3px 5px}
+    header{padding:3px 6px}.logo{display:none}
+    h1{font-size:15px;white-space:nowrap}.brand{gap:4px}
+    .playerName{font-size:9px}.playerScore{font-size:8px}.coverageTrack{height:6px}
+    .missionRoadmap{display:none}
+    .listenBar{padding:3px 5px}.hearBtn{padding:5px 7px;font-size:10px}.sentenceBtn{padding:5px 6px;font-size:8px}
+    .promptTitle{font-size:10px}.missionChip{display:none}.randomMissionBtn{display:inline-flex}
+    main{padding:4px;gap:3px;grid-template-rows:minmax(58px,29%) minmax(0,1fr)}
+    .syllableBox{padding:18px 3px 3px}.syllableBox::before{font-size:7px}
+    .trayHead{padding:2px 4px}.trayTitle{font-size:9px}
+    #phonogramTray{padding:3px;gap:3px}
+    .tile{height:32px;min-width:34px;padding:0 6px;font-size:16px;box-shadow:0 2px 0 #c9d8e3}
+    .tile.placed{height:30px;min-width:32px;font-size:15px}
+    footer{gap:3px}.mainBtn{min-width:72px;padding:5px 7px;font-size:10px}.smallBtn{padding:5px 6px;font-size:9px}
+    #feedback{font-size:9px}
   }
 
-  chooseCoverageWord=function(player){
+  @media(min-width:1400px){#app{width:min(1320px,100%)}}
+</style>`;
+
+    try{
+      const response=await fetch(ORIGINAL,{cache:'force-cache'});
+      if(!response.ok) throw new Error('Could not load game source');
+      let html=await response.text();
+      html=html.replace(/<meta\s+name=["']viewport["'][^>]*>/i,'<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />');
+
+      // Add a pupil-facing Random Mission button at the start of each mission.
+      html=html.replace(
+        '<span class="missionChip" id="missionChip">📝 Mission 1 • 0/10 words</span>',
+        '<span class="missionChip" id="missionChip">📝 Mission 1 • 0/10 words</span><button id="randomMissionBtn" class="missionChip randomMissionBtn hidden" type="button" title="Shuffle this mission before you start">🎲 Random Mission</button>'
+      );
+      html=html.replace(
+        '<span class="legendChip">✓ Correct word = coverage</span>',
+        '<span class="legendChip">✓ Correct word = coverage</span><span class="legendChip">🎲 Random Mission = fresh 10-word set</span>'
+      );
+
+      // State used only for a pupil-requested mission shuffle.
+      html=html.replace(
+        '  const $ = s => document.querySelector(s);',
+        '  let randomMissionQueue=[];\n  let randomMissionRerollExclusions=new Set();\n  let randomMissionKey="";\n  const $ = s => document.querySelector(s);'
+      );
+
+      // Fixed 60-word rule:
+      // - no spelling word can repeat anywhere in one game;
+      // - in 2-player mode the 60 words are shared across both pupils;
+      // - unused phonograms are prioritised until every taught phonogram has
+      //   appeared in at least one presented word;
+      // - after full coverage, unused source words fill the remaining slots.
+      const replacementChooseCoverageWord = `function chooseCoverageWord(player){
     if(randomMissionQueue.length){
       const queued=randomMissionQueue.shift();
       if(queued) return queued;
@@ -103,6 +191,10 @@
 
     const allKeys=state.allTokens.map(tokenKey);
     const globalUsedWords=new Set(state.players.flatMap(p=>[...p.usedWords].map(x=>String(x).toLowerCase())));
+
+    // Count phonograms from every word already presented, whether it was
+    // answered correctly or not. This makes the 60-word set itself the
+    // coverage guarantee.
     const presentedCoverage=new Set();
     state.words.forEach(w=>{
       if(globalUsedWords.has(String(w.word).toLowerCase())){
@@ -110,9 +202,16 @@
       }
     });
     const remaining=new Set(allKeys.filter(k=>!presentedCoverage.has(k)));
+
+    // Every selection comes from globally unused words, so no repeat is
+    // possible between missions or between Player 1 and Player 2.
     const unused=state.words.filter(w=>!globalUsedWords.has(String(w.word).toLowerCase()));
     if(!unused.length) return null;
 
+    // While coverage is incomplete, prefer words from the compact coverage
+    // deck, then fall back to any unused source word containing a missing
+    // phonogram. Greedy scoring favours words that cover several missing
+    // phonograms at once.
     if(remaining.size){
       let coveragePool=state.challengeWords.filter(w=>
         !globalUsedWords.has(String(w.word).toLowerCase()) &&
@@ -122,14 +221,58 @@
         coveragePool=unused.filter(w=>wordTokenKeys(w).some(k=>remaining.has(k)));
       }
       if(coveragePool.length){
-        return chooseProgressive(coveragePool,remaining,true);
+        const scored=coveragePool.map(w=>{
+          const keys=wordTokenKeys(w);
+          const fresh=keys.filter(k=>remaining.has(k)).length;
+          const syllables=Math.max(1,w.syllables?.length||1);
+          const tiles=(w.syllables||[]).reduce((sum,s)=>sum+(s.letters||[]).length,0);
+          return {w,score:fresh*100-syllables*7-tiles*.6+Math.random()*4};
+        }).sort((a,b)=>b.score-a.score);
+        return scored[0].w;
       }
     }
 
-    return chooseProgressive(unused,remaining,false);
-  };
+    // Full phonogram coverage has already been achieved. Fill the rest of
+    // the 60 places with other unused words, gently preferring shorter words
+    // while retaining some variety.
+    const scored=unused.map(w=>{
+      const syllables=Math.max(1,w.syllables?.length||1);
+      const tiles=(w.syllables||[]).reduce((sum,s)=>sum+(s.letters||[]).length,0);
+      return {w,score:-(syllables*6+tiles*.35)+Math.random()*9};
+    }).sort((a,b)=>b.score-a.score);
+    const top=scored.slice(0,Math.min(8,scored.length));
+    return top[Math.floor(Math.random()*top.length)].w;
+  }`;
 
-  buildRandomMissionQueue=function(){
+      html=html.replace(/function chooseCoverageWord\(player\)\{[\s\S]*?\n  \}\n\n  function nextWord/,replacementChooseCoverageWord+'\n\n  function nextWord');
+
+      const randomMissionHelpers=`  function currentMissionKey(){
+    const p=state.players[state.currentPlayer] || state.players[0];
+    if(state.mode===2){
+      const m=Math.min(state.players[0].mission||1,state.players[1].mission||1);
+      return '2:'+m;
+    }
+    return '1:'+(p?.mission||1);
+  }
+
+  function missionIsAtStart(){
+    if(!state.current || state.solved || state.attemptsThisWord>0) return false;
+    if(state.mode===2){
+      return state.players.every(p=>p.missionAttempts===0);
+    }
+    const p=state.players[state.currentPlayer] || state.players[0];
+    return p.missionWords===0;
+  }
+
+  function updateRandomMissionButton(){
+    const btn=$('#randomMissionBtn');
+    if(!btn) return;
+    const allowed=missionIsAtStart();
+    btn.classList.toggle('hidden',!allowed);
+    btn.disabled=!allowed;
+  }
+
+  function buildRandomMissionQueue(){
     const allKeys=state.allTokens.map(tokenKey);
     const globalUsedWords=new Set(state.players.flatMap(p=>[...p.usedWords].map(x=>String(x).toLowerCase())));
     const presentedCoverage=new Set();
@@ -147,7 +290,6 @@
 
     for(let slot=0;slot<10 && available.length;slot++){
       let candidates=available;
-      let coverageFirst=false;
       if(remaining.size){
         const compact=state.challengeWords.filter(w=>{
           const key=String(w.word||'').toLowerCase();
@@ -157,41 +299,200 @@
                  wordTokenKeys(w).some(k=>remaining.has(k));
         });
         const freshPool=available.filter(w=>wordTokenKeys(w).some(k=>remaining.has(k)));
-        if(compact.length){candidates=compact;coverageFirst=true}
-        else if(freshPool.length){candidates=freshPool;coverageFirst=true}
+        if(compact.length) candidates=compact;
+        else if(freshPool.length) candidates=freshPool;
       }
 
-      const pick=chooseProgressive(candidates,remaining,coverageFirst);
+      const scored=candidates.map(w=>{
+        const keys=wordTokenKeys(w);
+        const fresh=keys.filter(k=>remaining.has(k)).length;
+        const syllables=Math.max(1,w.syllables?.length||1);
+        const tiles=(w.syllables||[]).reduce((sum,s)=>sum+(s.letters||[]).length,0);
+        return {w,fresh,score:fresh*100-syllables*6-tiles*.4+Math.random()*16};
+      }).sort((a,b)=>b.score-a.score);
+
+      let pick;
+      if(remaining.size && scored[0]?.fresh>0){
+        const maxFresh=scored[0].fresh;
+        const elite=scored.filter(x=>x.fresh===maxFresh).slice(0,8);
+        pick=elite[Math.floor(Math.random()*elite.length)]?.w;
+      }else{
+        const top=scored.slice(0,Math.min(18,scored.length));
+        pick=top[Math.floor(Math.random()*top.length)]?.w;
+      }
       if(!pick) break;
+
       queue.push(pick);
       available=available.filter(w=>w!==pick);
       wordTokenKeys(pick).forEach(k=>remaining.delete(k));
     }
     return queue;
-  };
-})();
-<\\/script>\`;
+  }
 
-  Document.prototype.write=function(...args){
-    let html=args.join('');
-    if(armed && html.includes('function chooseCoverageWord(player)')){
-      armed=false;
-      html=html.replace('</body>',progressiveJS+'\\n</body>');
+  function randomiseMission(){
+    if(!missionIsAtStart()) return;
+    const key=currentMissionKey();
+    if(randomMissionKey!==key){
+      randomMissionKey=key;
+      randomMissionRerollExclusions=new Set();
     }
-    return nativeWrite.call(this,html);
-  };
+    if(state.current?.word){
+      randomMissionRerollExclusions.add(String(state.current.word).toLowerCase());
+    }
+
+    randomMissionQueue=buildRandomMissionQueue();
+    if(!randomMissionQueue.length){
+      feedback.textContent='No other unused mission is available.';
+      return;
+    }
+
+    state.current=randomMissionQueue.shift();
+    state.attemptsThisWord=0;
+    state.firstTry=true;
+    state.solved=false;
+    state.newlyCovered=[];
+    $('#checkBtn').classList.remove('hidden');
+    $('#nextBtn').classList.add('hidden');
+    $('#newCoverageChip').classList.add('hidden');
+    $('#promptTitle').innerHTML='🎲 New mission ready! Listen: word → sentence → word.';
+    $('#promptHint').textContent='This mission uses a fresh set of unused words while protecting phonogram coverage.';
+    feedback.classList.remove('feedbackGood','feedbackTry');
+    feedback.textContent='🎲 Mission shuffled! Your 10-word mission is different.';
+    buildRound();
+    updateStats();
+    saveProgress();
+    setTimeout(speakWord,250);
+  }`;
+
+      html=html.replace('\n  function twoPlayerMissionComplete(){','\n'+randomMissionHelpers+'\n\n  function twoPlayerMissionComplete(){');
+
+      // Keep the button visible only before the first attempt of a mission.
+      html=html.replace(
+        '    updateMissionStars();\n  }\n\n  function displayToken',
+        '    updateMissionStars();\n    updateRandomMissionButton();\n  }\n\n  function displayToken'
+      );
+      html=html.replace(
+        '  function checkAnswer(){\n    if(state.solved)return;',
+        '  function checkAnswer(){\n    if(state.solved)return;\n    const randomBtn=$("#randomMissionBtn");\n    if(randomBtn) randomBtn.classList.add("hidden");'
+      );
+
+      // Reset any queued random mission when a completely new game/reset starts.
+      html=html.replace(
+        "    const n1=String($('#player1Input').value||'Player 1').trim().slice(0,18)||'Player 1';",
+        "    randomMissionQueue=[]; randomMissionRerollExclusions=new Set(); randomMissionKey='';\n    const n1=String($('#player1Input').value||'Player 1').trim().slice(0,18)||'Player 1';"
+      );
+      html=html.replace(
+        '  function resetRace(){\n    localStorage.removeItem(STORAGE_KEY);',
+        '  function resetRace(){\n    randomMissionQueue=[]; randomMissionRerollExclusions=new Set(); randomMissionKey="";\n    localStorage.removeItem(STORAGE_KEY);'
+      );
+
+      html=html.replace(
+        "  $('#clearBtn').addEventListener('click',clearPlaced);",
+        "  $('#clearBtn').addEventListener('click',clearPlaced);\n  $('#randomMissionBtn').addEventListener('click',randomiseMission);"
+      );
+
+      // Make the start-screen wording explicit about the fixed 60-word set.
+      html=html.replace(
+        '<b>Goal:</b> complete 6 short missions of 10 words each. The six stars show the full journey. The selected words collectively cover every taught phonogram at least once.',
+        '<b>Goal:</b> complete exactly 60 different words across 6 missions. No word repeats. The 60-word set covers every taught phonogram at least once. At the start of any mission, tap <b>🎲 Random Mission</b> for a fresh 10-word set.'
+      );
+      html=html.replace(
+        '<b>2 players:</b> each mission has 10 words total — 5 words per pupil. Players alternate turns. Each word allows only 2 tries; after 2 incorrect tries, that word scores 0.',
+        '<b>2 players:</b> 60 different words in total — 10 per mission, 5 per pupil. Players alternate turns and share one no-repeat word pool. Random Mission reshuffles the shared 10-word mission before it starts. Each word allows only 2 tries; after 2 incorrect tries, that word scores 0.'
+      );
+
+      const freshnessCSS=`
+<style id="fresh-play-style">
+  #freshDecor{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+  .freshFloat{position:absolute;font-size:clamp(20px,3vw,40px);opacity:.14;animation:freshDrift 8s ease-in-out infinite alternate;filter:saturate(.9)}
+  .freshFloat:nth-child(1){left:3%;top:14%}.freshFloat:nth-child(2){right:4%;top:22%;animation-delay:-2s}
+  .freshFloat:nth-child(3){left:7%;bottom:13%;animation-delay:-4s}.freshFloat:nth-child(4){right:7%;bottom:10%;animation-delay:-1s}
+  @keyframes freshDrift{from{transform:translateY(-7px) rotate(-5deg)}to{transform:translateY(10px) rotate(7deg)}}
+  #app{position:relative;z-index:1}
+  .freshMoodChip{border-color:rgba(118,87,199,.25)!important;background:rgba(255,255,255,.8)!important;color:#53697a!important;box-shadow:0 2px 6px rgba(42,62,80,.07)}
+  .freshFlash{animation:freshFlash .55s ease-out}
+  @keyframes freshFlash{0%{transform:scale(.96);opacity:.45}70%{transform:scale(1.03);opacity:1}100%{transform:scale(1);opacity:1}}
+  @media(max-width:620px){.freshFloat:nth-child(3),.freshFloat:nth-child(4){display:none}.freshMoodChip{font-size:8.5px!important;padding:2px 5px!important}}
+  @media(prefers-reduced-motion:reduce){.freshFloat{animation:none}.freshFlash{animation:none}}
+</style>`;
+
+      const freshnessJS=`<script id="fresh-play-script">
+(()=>{
+  const themes=[
+    {name:'Sky Adventure',icon:'☁️',bg1:'#e7f5ff',bg2:'#fff2d9',accent:'#3b82d0',accent2:'#7657c7',soft:'#eaf4ff',decor:['☁️','⭐','🪁','✨']},
+    {name:'Garden Trail',icon:'🌱',bg1:'#eaf9ee',bg2:'#fff4dc',accent:'#2e9d63',accent2:'#5a8f4b',soft:'#e8f7ec',decor:['🌱','🌼','🍃','🐞']},
+    {name:'Ocean Quest',icon:'🌊',bg1:'#e4f7fb',bg2:'#fff0df',accent:'#2186a5',accent2:'#526bc1',soft:'#e7f6fa',decor:['🌊','🐚','🫧','🐠']},
+    {name:'Star Mission',icon:'✨',bg1:'#eeeaff',bg2:'#fff2d6',accent:'#7657c7',accent2:'#3d7ac5',soft:'#f1edff',decor:['✨','⭐','🪐','🌙']},
+    {name:'Rainbow Route',icon:'🌈',bg1:'#f0eeff',bg2:'#fff0e5',accent:'#7a62c9',accent2:'#d06f8c',soft:'#f4f0ff',decor:['🌈','✨','☁️','⭐']},
+    {name:'Sunny Safari',icon:'☀️',bg1:'#fff6db',bg2:'#eaf7ee',accent:'#d28b28',accent2:'#4f9a67',soft:'#fff5da',decor:['☀️','🌿','🦋','🌼']},
+    {name:'Arctic Spark',icon:'❄️',bg1:'#eaf8ff',bg2:'#f2efff',accent:'#4b91c4',accent2:'#8066c7',soft:'#edf8ff',decor:['❄️','✨','🧊','⭐']},
+    {name:'Festival Fun',icon:'🎈',bg1:'#fff0ed',bg2:'#ecf7ff',accent:'#d36d83',accent2:'#4b8fc0',soft:'#fff1f2',decor:['🎈','🎉','⭐','🎵']}
+  ];
+  const welcomes=['Fresh words, fresh challenge!','A new sound adventure begins!','Ready for a different mission today?','Listen closely — something new is waiting!','New look, new mission, same sound power!','Let the next spelling adventure begin!'];
+  const missionLines=['Sound detective mode!','Listen, build and discover!','A fresh sound trail awaits!','New mission, new surprises!','Find the sounds hiding in the words!','Build it one sound at a time!'];
+  let lastTheme=-1;
+  let lastMission='';
+
+  function pickTheme(){
+    if(themes.length<2) return 0;
+    let n=Math.floor(Math.random()*themes.length);
+    if(n===lastTheme) n=(n+1+Math.floor(Math.random()*(themes.length-1)))%themes.length;
+    lastTheme=n;
+    return n;
+  }
+
+  function ensureFreshUI(){
+    let decor=document.getElementById('freshDecor');
+    if(!decor){
+      decor=document.createElement('div');decor.id='freshDecor';decor.setAttribute('aria-hidden','true');
+      for(let i=0;i<4;i++){const s=document.createElement('span');s.className='freshFloat';decor.appendChild(s)}
+      document.body.prepend(decor);
+    }
+    let mood=document.getElementById('freshMoodChip');
+    const strip=document.querySelector('.missionStrip');
+    if(!mood && strip){mood=document.createElement('span');mood.id='freshMoodChip';mood.className='missionChip freshMoodChip';strip.appendChild(mood)}
+    return {decor,mood};
+  }
+
+  function applyFreshTheme(reason){
+    const t=themes[pickTheme()];
+    const ui=ensureFreshUI();
+    document.documentElement.style.setProperty('--bg1',t.bg1);
+    document.documentElement.style.setProperty('--bg2',t.bg2);
+    document.body.style.background='linear-gradient(135deg,'+t.bg1+','+t.bg2+')';
+    const logo=document.querySelector('.logo');
+    if(logo){logo.textContent=t.icon;logo.style.background='linear-gradient(145deg,'+t.accent+','+t.accent2+')';logo.classList.remove('freshFlash');void logo.offsetWidth;logo.classList.add('freshFlash')}
+    const listen=document.querySelector('.listenBar');if(listen) listen.style.borderColor=t.accent+'44';
+    const road=document.querySelector('.missionRoadmap');if(road) road.style.borderColor=t.accent+'33';
+    const trayHead=document.querySelector('.trayHead');if(trayHead) trayHead.style.background=t.soft;
+    const start=document.querySelector('.startBadge');
+    if(start) start.textContent=t.icon+' '+t.name+' • '+welcomes[Math.floor(Math.random()*welcomes.length)];
+    const hero=document.querySelector('#startScreen .startAdventure > div[style*="font-size"]');
+    if(hero) hero.textContent=t.icon+' 🎧 🧩';
+    if(ui.mood){ui.mood.textContent=t.icon+' '+t.name+' • '+missionLines[Math.floor(Math.random()*missionLines.length)];ui.mood.classList.remove('freshFlash');void ui.mood.offsetWidth;ui.mood.classList.add('freshFlash')}
+    [...ui.decor.children].forEach((el,i)=>{el.textContent=t.decor[i%t.decor.length]});
+  }
+
+  function watchMission(){
+    const chip=document.getElementById('missionChip');
+    if(!chip) return;
+    const m=(chip.textContent.match(/Mission\s+(\d+)/i)||[])[1]||'';
+    if(m && m!==lastMission){lastMission=m;applyFreshTheme('mission')}
+  }
+
+  const missionChip=document.getElementById('missionChip');
+  if(missionChip){new MutationObserver(watchMission).observe(missionChip,{childList:true,subtree:true,characterData:true})}
+  document.getElementById('startBtn')?.addEventListener('click',()=>setTimeout(()=>applyFreshTheme('new-game'),20),true);
+  document.getElementById('resumeBtn')?.addEventListener('click',()=>setTimeout(()=>applyFreshTheme('resume'),20),true);
+  document.getElementById('randomMissionBtn')?.addEventListener('click',()=>setTimeout(()=>applyFreshTheme('random'),20),true);
+  document.getElementById('playAgainBtn')?.addEventListener('click',()=>setTimeout(()=>{lastMission='';applyFreshTheme('play-again')},60),true);
+  applyFreshTheme('load');
+  watchMission();
 })();
 <\/script>`;
 
-    try{
-      const response=await fetch(BASE,{cache:'force-cache'});
-      if(!response.ok) throw new Error('Could not load base game');
-      let html=await response.text();
-
-      // The outer page owns the tracker so it fires once only.
-      html=html.replace(/\s*<script src="https:\/\/cdn\.counter\.dev\/script\.js"[^>]*><\/script>/i,'');
-      html=html.replace('</body>',progressionBridge+'\n</body>');
-
+      html=html.replace('</head>',responsiveCSS+'\n'+freshnessCSS+'\n</head>');
+      html=html.replace('</body>',freshnessJS+'\n</body>');
       document.open();
       document.write(html);
       document.close();
