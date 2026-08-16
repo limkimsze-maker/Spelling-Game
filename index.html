@@ -152,6 +152,18 @@
       if(!response.ok) throw new Error('Could not load game source');
       let html=await response.text();
       html=html.replace(/<meta\s+name=["']viewport["'][^>]*>/i,'<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />');
+
+      // Never repeat a spelling word during the same game. In 2-player mode,
+      // the used-word pool is shared so Player 2 cannot receive Player 1's word.
+      html=html.replace(
+        "let pool=state.challengeWords.filter(w=>!player.usedWords.has(String(w.word).toLowerCase()));",
+        "const globalUsedWords=new Set(state.players.flatMap(p=>[...p.usedWords].map(x=>String(x).toLowerCase())));\n    let pool=state.challengeWords.filter(w=>!globalUsedWords.has(String(w.word).toLowerCase()));"
+      );
+      html=html.replace(
+        "!player.usedWords.has(String(w.word).toLowerCase()) &&\n        wordTokenKeys(w).some(k=>remaining.has(k))",
+        "!globalUsedWords.has(String(w.word).toLowerCase()) &&\n        wordTokenKeys(w).some(k=>remaining.has(k))"
+      );
+
       html=html.replace('</head>',responsiveCSS+'\n</head>');
       document.open();
       document.write(html);
