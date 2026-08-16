@@ -1,14 +1,6 @@
   // Reliable, child-friendly partner-help prompt for 2-player mode.
-  // The original Check button listener is already registered before this patch,
-  // so this second listener runs after the answer has been checked.
-  let partnerHelpDismissArmedAt=0;
-
-  function dismissPartnerHelpOnInteraction(){
-    const prompt=document.getElementById('partnerHelpPrompt');
-    if(!prompt || prompt.classList.contains('hidden')) return;
-    if(performance.now()<partnerHelpDismissArmedAt) return;
-    hidePartnerHelpPrompt();
-  }
+  // It sits in the empty lower part of the listening panel so it never covers
+  // the syllable boxes or phonogram tiles. It remains until Check is pressed again.
 
   showPartnerHelpPrompt=function(){
     if(state.mode!==2) return;
@@ -18,119 +10,107 @@
     const activeName=active?.name||'your friend';
 
     let prompt=document.getElementById('partnerHelpPrompt');
+    const listenBar=document.querySelector('.listenBar');
     if(!prompt){
       prompt=document.createElement('div');
       prompt.id='partnerHelpPrompt';
       prompt.setAttribute('aria-live','polite');
-      document.body.appendChild(prompt);
     }
+    // Keep the reminder physically inside the listening panel.
+    if(listenBar && prompt.parentElement!==listenBar) listenBar.appendChild(prompt);
+    else if(!prompt.parentElement) document.body.appendChild(prompt);
 
     prompt.className='partnerHelpPrompt bigCuteHelp';
     prompt.innerHTML=`
-      <div class="helpFaces">🤝 💛 🤝</div>
-      <div class="helpTitle">${escapeHtml(helperName)}, help ${escapeHtml(activeName)}!</div>
+      <div class="helpTitle">🤝 ${escapeHtml(helperName)}, help ${escapeHtml(activeName)}! 💛</div>
       <div class="helpMain">👂 Say the <b>sounds or syllables</b> slowly together.</div>
       <div class="helpDont">🙊 Don’t give the spelling.</div>
     `;
 
-    // Ignore the same click/tap that produced the wrong-answer result, then
-    // dismiss as soon as the pupils next touch the screen or use the mouse.
-    partnerHelpDismissArmedAt=performance.now()+350;
+    // No auto-hide timer. The reminder stays visible until Check is pressed again.
     clearTimeout(partnerHelpTimer);
-    partnerHelpTimer=setTimeout(hidePartnerHelpPrompt,7000);
+    partnerHelpTimer=0;
   };
 
-  // Add a direct listener to the existing Check button so the help prompt is
-  // triggered reliably after the first wrong try, even though the original
-  // click handler was registered before the teamwork wrapper existed.
+  // The original Check listener is already registered before this patch.
+  // This second listener runs after the answer is checked.
   const teamworkCheckBtn=document.getElementById('checkBtn');
   if(teamworkCheckBtn&&!teamworkCheckBtn.dataset.teamworkPromptFixed){
     teamworkCheckBtn.dataset.teamworkPromptFixed='1';
     teamworkCheckBtn.addEventListener('click',()=>{
+      const prompt=document.getElementById('partnerHelpPrompt');
+      const wasVisible=!!(prompt&&!prompt.classList.contains('hidden'));
+
+      // Any subsequent Check removes the existing teamwork reminder.
+      if(wasVisible) hidePartnerHelpPrompt();
+
+      // Only the first incorrect try creates a new reminder.
       setTimeout(()=>{
-        if(state.mode===2&&!state.solved&&state.attemptsThisWord===1){
+        if(!wasVisible && state.mode===2 && !state.solved && state.attemptsThisWord===1){
           showPartnerHelpPrompt();
         }
       },0);
     });
   }
 
-  // The reminder should never get in the way once pupils resume interacting.
-  if(!document.documentElement.dataset.teamworkHelpDismissFixed){
-    document.documentElement.dataset.teamworkHelpDismissFixed='1';
-    document.addEventListener('pointerdown',dismissPartnerHelpOnInteraction,true);
-    document.addEventListener('touchstart',dismissPartnerHelpOnInteraction,{capture:true,passive:true});
-    document.addEventListener('mousemove',dismissPartnerHelpOnInteraction,{capture:true,passive:true});
-  }
-
   const cuteHelpStyle=document.createElement('style');
   cuteHelpStyle.id='big-cute-teamwork-help-style';
   cuteHelpStyle.textContent=`
+    .listenBar{position:relative!important}
     #partnerHelpPrompt.bigCuteHelp{
-      position:fixed!important;
+      position:absolute!important;
       left:50%!important;
-      top:max(calc(env(safe-area-inset-top) + 10px),4vh)!important;
+      bottom:12px!important;
+      top:auto!important;
       transform:translateX(-50%)!important;
-      z-index:120!important;
-      width:min(620px,92vw)!important;
-      padding:16px 20px 14px!important;
-      border-radius:28px!important;
-      background:linear-gradient(180deg,#fffdf0,#fff7c8)!important;
-      border:5px solid #f2c94c!important;
-      box-shadow:0 16px 50px rgba(0,0,0,.28),0 0 0 8px rgba(255,255,255,.5)!important;
+      z-index:20!important;
+      width:min(760px,82%)!important;
+      padding:10px 16px 9px!important;
+      border-radius:22px!important;
+      background:linear-gradient(180deg,#fffdf0,#fff5bd)!important;
+      border:4px solid #f2c94c!important;
+      box-shadow:0 8px 22px rgba(91,72,12,.16),0 0 0 5px rgba(255,255,255,.55)!important;
       text-align:center!important;
       color:#5d4a10!important;
       pointer-events:none!important;
-      animation:cuteHelpPop .34s cubic-bezier(.2,.9,.2,1.25)!important;
-    }
-    #partnerHelpPrompt.bigCuteHelp .helpFaces{
-      font-size:clamp(34px,8vw,56px)!important;
-      line-height:1!important;
-      margin-bottom:2px!important;
-      animation:cuteHelpBounce 1s ease-in-out infinite alternate!important;
+      animation:cuteHelpPop .32s cubic-bezier(.2,.9,.2,1.2)!important;
     }
     #partnerHelpPrompt.bigCuteHelp .helpTitle{
-      font-size:clamp(22px,5.5vw,36px)!important;
+      font-size:clamp(20px,2.4vw,31px)!important;
       line-height:1.08!important;
       font-weight:1000!important;
       color:#7a5700!important;
-      margin:3px 0 9px!important;
+      margin:0 0 5px!important;
       text-shadow:0 2px 0 rgba(255,255,255,.9)!important;
     }
     #partnerHelpPrompt.bigCuteHelp .helpMain{
-      font-size:clamp(16px,4vw,23px)!important;
-      line-height:1.25!important;
+      font-size:clamp(15px,1.65vw,21px)!important;
+      line-height:1.2!important;
       font-weight:900!important;
       color:#385d73!important;
-      background:#f5fbff!important;
-      border:3px solid #b9d9ef!important;
-      border-radius:18px!important;
-      padding:9px 12px!important;
-      margin:6px 0!important;
+      margin:2px 0!important;
     }
     #partnerHelpPrompt.bigCuteHelp .helpDont{
-      font-size:clamp(15px,3.8vw,21px)!important;
-      line-height:1.2!important;
+      font-size:clamp(14px,1.45vw,19px)!important;
+      line-height:1.18!important;
       font-weight:1000!important;
       color:#b34f52!important;
-      background:#fff0f1!important;
-      border:3px solid #efb9bd!important;
-      border-radius:18px!important;
-      padding:8px 12px!important;
+      margin-top:2px!important;
     }
     @keyframes cuteHelpPop{
-      from{opacity:0;transform:translateX(-50%) scale(.72) rotate(-2deg)}
-      to{opacity:1;transform:translateX(-50%) scale(1) rotate(0)}
+      from{opacity:0;transform:translateX(-50%) scale(.82) translateY(8px)}
+      to{opacity:1;transform:translateX(-50%) scale(1) translateY(0)}
     }
-    @keyframes cuteHelpBounce{
-      from{transform:translateY(0) rotate(-2deg)}
-      to{transform:translateY(-4px) rotate(2deg)}
+    @media(max-width:760px){
+      #partnerHelpPrompt.bigCuteHelp{width:min(560px,78%)!important;bottom:9px!important;padding:8px 10px 7px!important;border-width:3px!important;border-radius:18px!important}
+      #partnerHelpPrompt.bigCuteHelp .helpTitle{font-size:clamp(16px,4.3vw,23px)!important;margin-bottom:3px!important}
+      #partnerHelpPrompt.bigCuteHelp .helpMain{font-size:clamp(12px,3.3vw,17px)!important}
+      #partnerHelpPrompt.bigCuteHelp .helpDont{font-size:clamp(11px,3vw,15px)!important}
     }
-    @media(max-height:650px){
-      #partnerHelpPrompt.bigCuteHelp{top:max(calc(env(safe-area-inset-top) + 6px),2vh)!important;padding:9px 12px 8px!important;border-radius:20px!important;border-width:4px!important}
-      #partnerHelpPrompt.bigCuteHelp .helpFaces{font-size:30px!important;margin-bottom:0!important}
-      #partnerHelpPrompt.bigCuteHelp .helpTitle{font-size:21px!important;margin:1px 0 5px!important}
-      #partnerHelpPrompt.bigCuteHelp .helpMain,#partnerHelpPrompt.bigCuteHelp .helpDont{font-size:14px!important;padding:5px 8px!important;margin:3px 0!important;border-width:2px!important}
+    @media(max-height:620px){
+      #partnerHelpPrompt.bigCuteHelp{bottom:5px!important;padding:5px 9px!important;border-width:3px!important}
+      #partnerHelpPrompt.bigCuteHelp .helpTitle{font-size:16px!important;margin-bottom:1px!important}
+      #partnerHelpPrompt.bigCuteHelp .helpMain,#partnerHelpPrompt.bigCuteHelp .helpDont{font-size:11px!important;line-height:1.1!important}
     }
   `;
   document.head.appendChild(cuteHelpStyle);
