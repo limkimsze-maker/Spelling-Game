@@ -24,6 +24,7 @@
     const MATCH='https://raw.githubusercontent.com/limkimsze-maker/Spelling-Game/main/match-celebration.js?v=20260816a';
     const TEAMWORK='https://raw.githubusercontent.com/limkimsze-maker/Spelling-Game/main/teamwork.js?v=20260816c';
     const TEAMWORK_RELAXED='https://raw.githubusercontent.com/limkimsze-maker/Spelling-Game/main/teamwork-relaxed.js?v=20260816a';
+    const TEAMWORK_PROMPT_FIX='https://raw.githubusercontent.com/limkimsze-maker/Spelling-Game/main/teamwork-prompt-fix.js?v=20260816a';
     try{
       const r=await fetch(STABLE_WRAPPER,{cache:'no-store'});
       if(!r.ok) throw new Error('Could not load stable game wrapper');
@@ -36,13 +37,15 @@
         "      const matchResponse=await fetch('"+MATCH+"',{cache:'no-store'});",
         "      const teamworkResponse=await fetch('"+TEAMWORK+"',{cache:'no-store'});",
         "      const teamworkRelaxedResponse=await fetch('"+TEAMWORK_RELAXED+"',{cache:'no-store'});",
+        "      const teamworkPromptFixResponse=await fetch('"+TEAMWORK_PROMPT_FIX+"',{cache:'no-store'});",
         "      const internalPatch=patchResponse.ok?await patchResponse.text():'';",
         "      const adjustmentPatch=adjustResponse.ok?await adjustResponse.text():'';",
         "      const creditPatch=creditResponse.ok?await creditResponse.text():'';",
         "      const matchPatch=matchResponse.ok?await matchResponse.text():'';",
         "      const teamworkPatch=teamworkResponse.ok?await teamworkResponse.text():'';",
         "      const teamworkRelaxedPatch=teamworkRelaxedResponse.ok?await teamworkRelaxedResponse.text():'';",
-        "      const combinedPatch=internalPatch+'\\n'+adjustmentPatch+'\\n'+creditPatch+'\\n'+matchPatch+'\\n'+teamworkPatch+'\\n'+teamworkRelaxedPatch;",
+        "      const teamworkPromptFixPatch=teamworkPromptFixResponse.ok?await teamworkPromptFixResponse.text():'';",
+        "      const combinedPatch=internalPatch+'\\n'+adjustmentPatch+'\\n'+creditPatch+'\\n'+matchPatch+'\\n'+teamworkPatch+'\\n'+teamworkRelaxedPatch+'\\n'+teamworkPromptFixPatch;",
         "      if(combinedPatch.trim()){",
         "        html=html.replace('  setMode(1,true);\\n  loadProgress();loadCorpus();',combinedPatch+'\\n\\n  setMode(1,true);\\n  loadProgress();loadCorpus();');",
         "      }"
