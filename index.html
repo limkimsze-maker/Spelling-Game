@@ -18,8 +18,7 @@
   <script>
   (async()=>{
     const STABLE_WRAPPER='https://raw.githubusercontent.com/limkimsze-maker/Spelling-Game/07e9499cfd626c14715fc956e2fb7e14fda749b4/index.html';
-    const PATCH='https://raw.githubusercontent.com/limkimsze-maker/Spelling-Game/main/game-patch.js?v=20260816e';
-    const EXCLUDE_REDO='https://raw.githubusercontent.com/limkimsze-maker/Spelling-Game/main/exclude-redo.js?v=20260816a';
+    const PATCH='https://raw.githubusercontent.com/limkimsze-maker/Spelling-Game/main/game-patch.js?v=20260816g';
     try{
       const r=await fetch(STABLE_WRAPPER,{cache:'no-store'});
       if(!r.ok) throw new Error('Could not load stable game wrapper');
@@ -27,18 +26,15 @@
 
       const injection=[
         "      const patchResponse=await fetch('"+PATCH+"',{cache:'no-store'});",
-        "      const redoResponse=await fetch('"+EXCLUDE_REDO+"',{cache:'no-store'});",
         "      const internalPatch=patchResponse.ok?await patchResponse.text():'';",
-        "      const redoPatch=redoResponse.ok?await redoResponse.text():'';",
-        "      const combinedPatch=internalPatch+'\\n'+redoPatch;",
-        "      if(combinedPatch.trim()){",
-        "        html=html.replace('  setMode(1,true);\\n  loadProgress();loadCorpus();',combinedPatch+'\\n\\n  setMode(1,true);\\n  loadProgress();loadCorpus();');",
+        "      if(internalPatch.trim()){",
+        "        html=html.replace('  setMode(1,true);\\n  loadProgress();loadCorpus();',internalPatch+'\\n\\n  setMode(1,true);\\n  loadProgress();loadCorpus();');",
         "      }"
       ].join('\n');
 
       shell=shell.replace('      let html=await response.text();','      let html=await response.text();\n'+injection);
-      // The old external morphology add-on could not access the game's local
-      // state. The new patches are inserted inside the game instead.
+      // The comprehensive patch is inserted inside the game so it can access
+      // the game's local state, word bank and coverage functions safely.
       shell=shell.replace(/      const morphologyScript=.*?;\n/,"      const morphologyScript='';\n");
 
       document.open();
